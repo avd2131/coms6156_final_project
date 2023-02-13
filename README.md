@@ -14,3 +14,5 @@ This project builds a web extension to enable an in-house screen reader experien
 
 To Test: On-demand spatialization. 
 
+Intended user experience: users keyboard around and hear spatialized audio of each element.
+
