@@ -10,9 +10,8 @@ This project builds a web extension to enable an in-house screen reader experien
 
 3. Spatialize corresponding audio.
 
-4. If user scrolls the page we will need to repeat this pre-processing. 
+4. If user scrolls the page we will need to repeat this pre-processing.
 
-To Test: On-demand spatialization. 
+To Test: On-demand spatialization.
 
 Intended user experience: users keyboard around and hear spatialized audio of each element.
-
