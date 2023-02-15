@@ -15,3 +15,15 @@ This project builds a web extension to enable an in-house screen reader experien
 To Test: On-demand spatialization.
 
 Intended user experience: users keyboard around and hear spatialized audio of each element.
+
+## Build Instructions:
+
+Install npm if not already installed, and run
+
+`npm run build` (one-time build)
+
+or
+
+`npm run watch` (hot reload)
+
+on this directory.
