@@ -16,7 +16,7 @@ To Test: On-demand spatialization.
 
 Intended user experience: users keyboard around and hear spatialized audio of each element.
 
-## Build Instructions:
+## Build Instructions
 
 Install npm if not already installed, and run
 
