@@ -34,6 +34,9 @@ let sources: AudioBufferSourceNode[] = [];
 
 /** Plays a sound file in a spatialized manner given the file path of the audio file. (e.g. 'h1.mp3') */
 export async function playSound(bias: { x: number; y: number }, text: string): Promise<void> {
+	// Don't waste any resources with empty strings.
+	if (text === '') return;
+
 	if (!audioCtx) {
 		audioCtx = new AudioContext();
 		panner = audioCtx.createPanner();

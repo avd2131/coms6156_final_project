@@ -1,4 +1,5 @@
 import { getBias, playSound } from './audioPlayer';
+import { getReadout } from './textContent';
 
 console.log('Content script loaded');
 
@@ -13,7 +14,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 	}
 });
 
-document.addEventListener('keydown', (e) => {
+document.addEventListener('keydown', async (e) => {
 	// console.log(e); (Logs keyboard events)
 
 	switch (e.key.toLowerCase()) {
@@ -29,7 +30,7 @@ document.addEventListener('keydown', (e) => {
 			if (e.ctrlKey || e.metaKey) {
 				// Test active element reading with Ctrl/Command + T.
 				const focusedElement = document.activeElement as HTMLElement;
-				playSound(getBias(focusedElement), document.activeElement?.nodeName ?? 'bruh');
+				await playSound(getBias(focusedElement), getReadout(focusedElement));
 			}
 			break;
 	}
