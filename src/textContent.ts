@@ -23,7 +23,7 @@ export function getReadout(element: HTMLElement): string {
 			break;
 		default:
 			console.log('unknown element type:', element.nodeName.toLowerCase(), 'element:', element);
-			// If dealing with element not listed, return empty string (ignore its)
+			// If dealing with element not listed, return empty string (ignore it)
 			return '';
 	}
 
