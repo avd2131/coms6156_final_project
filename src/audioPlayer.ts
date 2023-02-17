@@ -115,28 +115,3 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
 		source.start(0);
 	});
 }
-
-/** Gets the horizontal/vertical bias of an onscreen element. Returns x/y biases bounded by -1 & 1. (0 signifies center of screen) */
-export function getBias(element: HTMLElement, roundToTenth = true): { x: number; y: number } {
-	const rect = element.getBoundingClientRect();
-
-	// Get midpoint of element (https://javascript.info/coordinates)
-	const midpoint = { x: rect.left + rect.width / 2, y: rect.bottom - rect.height / 2 };
-
-	//console.log('width:', window.innerWidth, 'height:', window.innerHeight, 'midpoint:', midpoint, 'scroll pos:', window.scrollY);
-
-	const bias = { x: midpoint.x / window.innerWidth, y: midpoint.y / window.innerHeight };
-
-	let xBias = -1 + 2 * bias.x;
-	let yBias = 1 - 2 * bias.y;
-
-	// If the element is not on screen, set the yBias to 0. This can easily be changed if we ever want to handle this edge case differently
-	if (yBias > 1 || yBias < -1) yBias = 0;
-
-	if (roundToTenth) {
-		xBias = Math.round(xBias * 10) / 10;
-		yBias = Math.round(yBias * 10) / 10;
-	}
-
-	return { x: xBias, y: yBias };
-}
