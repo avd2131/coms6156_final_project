@@ -68,7 +68,9 @@ export function getReadout(element: HTMLElement): string {
 			break;
 		default:
 			console.warn('unknown element type: "' + element.tagName.toLowerCase().trim() + '" element:', element);
-			// If dealing with element not listed, return empty string (ignore it)
+			// If dealing with element not listed, turn to aria-label
+			elementContent = element.getAttribute('aria-label');
+
 			if (!elementContent) return '';
 	}
 
