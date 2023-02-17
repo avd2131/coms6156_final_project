@@ -35,3 +35,24 @@ document.addEventListener('keydown', async (e) => {
 			break;
 	}
 });
+
+// Detects which element is currently being focused on and gives it a border
+let lastBorder = '';
+document.addEventListener(
+	'focusin',
+	() => {
+		const activeElement = document.activeElement as HTMLElement;
+		lastBorder = activeElement.style.border ?? '';
+		activeElement.style.border = '2px solid #00d0ff';
+	},
+	true
+);
+
+document.addEventListener(
+	'focusout',
+	(e) => {
+		const unfocusedElement = e.target as HTMLElement;
+		unfocusedElement.style.border = lastBorder; // Preserves existing border if it had any
+	},
+	true
+);

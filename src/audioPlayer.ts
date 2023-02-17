@@ -87,7 +87,6 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
 		// source.buffer = await audioCtx.decodeAudioData(await audioFile.arrayBuffer());
 
 		// Using MeSpeak
-		console.log(meSpeak.speak(text, { rawdata: true }));
 		source.buffer = await audioCtx!.decodeAudioData(meSpeak.speak(text, { rawdata: true }));
 
 		source.onended = () => {
@@ -97,7 +96,7 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
 
 		//Modifies pitch based on provided y-value
 		if (spatialAudioEnabled) {
-			console.log(bias.x, bias.y);
+			//console.log(bias.x, bias.y);
 			setPannerPosition(bias.x, bias.y);
 		}
 
@@ -121,10 +120,10 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
 export function getBias(element: HTMLElement, roundToTenth = true): { x: number; y: number } {
 	const rect = element.getBoundingClientRect();
 
-	//Get midpoint of element (https://javascript.info/coordinates)
+	// Get midpoint of element (https://javascript.info/coordinates)
 	const midpoint = { x: rect.left + rect.width / 2, y: rect.bottom - rect.height / 2 };
 
-	console.log('width:', window.innerWidth, 'height:', window.innerHeight, 'midpoint:', midpoint, 'scroll pos:', window.scrollY);
+	//console.log('width:', window.innerWidth, 'height:', window.innerHeight, 'midpoint:', midpoint, 'scroll pos:', window.scrollY);
 
 	const bias = { x: midpoint.x / window.innerWidth, y: midpoint.y / window.innerHeight };
 
