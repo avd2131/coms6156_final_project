@@ -60,6 +60,7 @@ export function getElementInDirection(startingElement: HTMLElement | undefined, 
 		if (attempts++ > maxAttempts) break;
 	}
 
+	nextEl?.setAttribute('tabindex', '-1');
 	return nextEl;
 }
 

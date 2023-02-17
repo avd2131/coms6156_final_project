@@ -22,7 +22,8 @@ export function getReadout(element: HTMLElement): string {
 		console.log('Labeled by:', labelElement, '; element content: ', elementContent);
 	}
 
-	switch (element.tagName.toLowerCase()) {
+	const elTag = element.tagName.toLowerCase();
+	switch (elTag) {
 		case 'a':
 			// If the link itself doesn't have any content, run a query selector on the first element with either alt or aria-label on it and re-run this function with it
 			elementName = 'link';
@@ -34,6 +35,18 @@ export function getReadout(element: HTMLElement): string {
 				const firstChildWithInfo = element.querySelector('[alt], [aria], [aria-labelledby]') as HTMLElement;
 				if (firstChildWithInfo) return getReadout(firstChildWithInfo as HTMLElement);
 			}
+			break;
+		case 'h1':
+		case 'h2':
+		case 'h3':
+		case 'h4':
+		case 'h5':
+		case 'h6':
+			elementFirst = false;
+
+			elementName = `heading level ${elTag.slice(-1)}`;
+
+			elementContent = element.innerText;
 			break;
 		case 'p':
 			elementName = 'text';
@@ -51,6 +64,7 @@ export function getReadout(element: HTMLElement): string {
 			elementFirst = false;
 
 			elementName = 'button';
+			if (!labelledByOtherElement) elementContent = element.innerText ?? '';
 			break;
 		default:
 			console.warn('unknown element type: "' + element.tagName.toLowerCase().trim() + '" element:', element);
