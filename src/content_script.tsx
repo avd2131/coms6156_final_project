@@ -1,7 +1,4 @@
-import { playSound } from './audioPlayer';
-import { getBias, getElementInDirection, getElementMidpoint } from './elementUtils';
 import { initializeNavigationListeners, setLastFocusedElement } from './navigation';
-import { getReadout } from './textContent';
 
 console.log('%cSpatial Interactions Extension: Content script loaded!', 'color: green; font-style: bold');
 

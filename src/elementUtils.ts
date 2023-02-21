@@ -111,13 +111,6 @@ export function getElementInDirection(startingElement: HTMLElement | undefined, 
 	return nextEl;
 }
 
-const recognizedElements: string[] = ['a', 'li', 'svg', 'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'button', 'div'];
-function elementRecognized(element: HTMLElement): boolean {
-	if (!element) return false;
-
-	return recognizedElements.includes(element.tagName.toLowerCase());
-}
-
 function elementsRelated(firstElement: HTMLElement, secondElement: HTMLElement) {
 	return firstElement.contains(secondElement) || secondElement.contains(firstElement);
 }

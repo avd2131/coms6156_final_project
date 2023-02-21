@@ -52,29 +52,7 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
 		soundPromiseRejectMethods.set(id, reject);
 
 		//Prevent multiple sounds from playing at the same time
-		try {
-			if (lastSoundSource !== undefined) {
-				lastSoundSource.sourceNode.stop();
-
-				//Reject last sound's promise
-				soundPromiseRejectMethods.get(lastSoundSource.id)!(lastSoundSource.id);
-				soundPromiseRejectMethods.delete(lastSoundSource.id);
-
-				lastSoundSource = undefined;
-			}
-
-			for (let i = 0; i < sources.length; i++) {
-				const source = sources[i];
-
-				if (source) {
-					source.stop();
-				}
-			}
-		} catch {
-			reject();
-			//Possible error: InvalidStateNode (DOMException) Thrown if the node has not been started by calling start(). (https://developer.mozilla.org/en-US/docs/Web/API/AudioScheduledSourceNode/stop)
-			//This error isn't important. A try/catch block is used to help keep the console neater until a better method of solving this issue is found.
-		}
+		await stopAllSounds();
 
 		//Gets audio file from imported path
 		//const audioFile = await getFile(audioFilePath, 'dirAudio');
@@ -115,3 +93,37 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
 		source.start(0);
 	});
 }
+
+export function stopAllSounds() {
+	return new Promise<void>(async (resolve, reject) => {
+		try {
+			if (lastSoundSource !== undefined) {
+				lastSoundSource.sourceNode.stop();
+
+				//Reject last sound's promise
+				soundPromiseRejectMethods.get(lastSoundSource.id)!(lastSoundSource.id);
+				soundPromiseRejectMethods.delete(lastSoundSource.id);
+
+				lastSoundSource = undefined;
+			}
+
+			for (let i = 0; i < sources.length; i++) {
+				const source = sources[i];
+
+				if (source) {
+					source.stop();
+				}
+			}
+
+			resolve();
+		} catch {
+			reject();
+			//Possible error: InvalidStateNode (DOMException) Thrown if the node has not been started by calling start(). (https://developer.mozilla.org/en-US/docs/Web/API/AudioScheduledSourceNode/stop)
+			//This error isn't important. A try/catch block is used to help keep the console neater until a better method of solving this issue is found.
+		}
+	});
+}
+
+document.addEventListener('keydown', (e) => {
+	if (e.key.toLowerCase() === 'escape') stopAllSounds();
+});
