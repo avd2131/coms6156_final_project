@@ -30,43 +30,81 @@ export function getElementMidpoint(element: HTMLElement) {
 }
 
 export function getElementStartingPoints(element: HTMLElement, dir: string) {
-	const rect = element.getBoundingClientRect();
-
-	switch (dir) {
-		case 'left':
-			return [{ x: rect.left, y: rect.bottom - rect.height / 2 }];
-		case 'right':
-			return [{ x: rect.right, y: rect.bottom - rect.height / 2 }];
-		case 'up':
-			return [{ x: rect.left + rect.width / 2, y: rect.top }];
-		case 'down':
-			return [{ x: rect.left + rect.width / 2, y: rect.bottom }];
+	if (!element) {
+		console.error("Provided element doesn't exist.");
+		return undefined;
 	}
-}
-
-export function getDirectionalMidpoint(element: HTMLElement, dir: string): { x: number; y: number } | undefined {
-	if (!element) return undefined;
 
 	const rect = element.getBoundingClientRect();
 
 	switch (dir) {
 		case 'left':
-			return { x: rect.left, y: rect.bottom - rect.height / 2 };
+			return [
+				{ x: rect.left, y: rect.bottom },
+				{ x: rect.left, y: rect.bottom - rect.height / 2 },
+				{ x: rect.left, y: rect.top }
+			];
 		case 'right':
-			return { x: rect.right, y: rect.bottom - rect.height / 2 };
+			return [
+				{ x: rect.right, y: rect.bottom },
+				{ x: rect.right, y: rect.bottom - rect.height / 2 },
+				{ x: rect.right, y: rect.top }
+			];
 		case 'up':
-			return { x: rect.left + rect.width / 2, y: rect.bottom };
+			return [
+				{ x: rect.left, y: rect.top },
+				{ x: rect.left + rect.width / 2, y: rect.top },
+				{ x: rect.right, y: rect.top }
+			];
 		case 'down':
-			return { x: rect.left + rect.width / 2, y: rect.top };
+			return [
+				{ x: rect.left, y: rect.bottom },
+				{ x: rect.left + rect.width / 2, y: rect.bottom },
+				{ x: rect.right, y: rect.bottom }
+			];
+		default:
+			console.error('Unknown direction:', dir);
+			return undefined;
 	}
-
-	return undefined;
 }
 
-export function worthNavigatingTo(startingElement: HTMLElement, destinationElement: HTMLElement): boolean {
-	if (startingElement === destinationElement || /*!elementRecognized(destinationElement)*/ getReadout(destinationElement) === '' || elementsRelated(startingElement, destinationElement)) return false;
+const acceptableEdgeDistance = 20;
+export function worthNavigatingTo(startingElement: HTMLElement, destinationElement: HTMLElement, dir: string): boolean {
+	if (startingElement === destinationElement || getReadout(destinationElement) === '' || elementsRelated(startingElement, destinationElement)) return false;
+
+	const startElRect = startingElement.getBoundingClientRect();
+	const destElRect = destinationElement.getBoundingClientRect();
+
+	switch (dir) {
+		case 'up':
+			if (Math.abs(startElRect.top - destElRect.top) < acceptableEdgeDistance) return false;
+			break;
+		case 'down':
+			if (Math.abs(startElRect.bottom - destElRect.bottom) < acceptableEdgeDistance) return false;
+			break;
+		case 'left':
+			if (Math.abs(startElRect.left - destElRect.left) < acceptableEdgeDistance) return false;
+			break;
+		case 'right':
+			if (Math.abs(startElRect.right - destElRect.right) < acceptableEdgeDistance) return false;
+			break;
+	}
 
 	return true;
+}
+
+function elementsFromPoints(points: { x: number; y: number }[]) {
+	const elements: HTMLElement[] = [];
+
+	points.forEach((point) => {
+		const elementsAtPoint = document.elementsFromPoint(point.x, point.y) as HTMLElement[];
+
+		elementsAtPoint.forEach((el) => {
+			elements.push(el);
+		});
+	});
+
+	return elements;
 }
 
 export function getElementInDirection(startingElement: HTMLElement | undefined, dir: string, maxAttempts: number): HTMLElement | undefined {
@@ -75,30 +113,37 @@ export function getElementInDirection(startingElement: HTMLElement | undefined, 
 
 	if (!startingElement) return undefined;
 
-	// let startingPoint = getDirectionalMidpoint(startingElement, dir)!;
-	let startingPoint = getElementStartingPoints(startingElement, dir)![0];
+	let startingPoints = getElementStartingPoints(startingElement, dir)!;
 
 	nextEl = startingElement;
 	let validElements: HTMLElement[] = [];
 	while (validElements.length === 0) {
-		validElements = (document.elementsFromPoint(startingPoint.x, startingPoint.y) as HTMLElement[]).filter((el) => worthNavigatingTo(startingElement, el));
+		validElements = elementsFromPoints(startingPoints).filter((el) => worthNavigatingTo(startingElement, el, dir));
 
 		console.log('Valid elements: ', validElements);
 
 		switch (dir) {
 			case 'left':
-				startingPoint.x -= 10;
+				startingPoints.forEach((pt) => {
+					pt.x -= 10;
+				});
 				break;
 			case 'up':
 				// y-coordinate is reversed in web
-				startingPoint.y -= 10;
+				startingPoints.forEach((pt) => {
+					pt.y -= 10;
+				});
 				break;
 			case 'right':
-				startingPoint.x += 10;
+				startingPoints.forEach((pt) => {
+					pt.x += 10;
+				});
 				break;
 			case 'down':
 				// y-coordinate is reversed in web
-				startingPoint.y += 10;
+				startingPoints.forEach((pt) => {
+					pt.y += 10;
+				});
 				break;
 		}
 

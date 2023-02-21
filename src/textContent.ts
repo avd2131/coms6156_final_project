@@ -51,7 +51,11 @@ export function getReadout(element: HTMLElement): string {
 			elementContent = element.innerText;
 			break;
 		case 'li':
-			elementContent = element.innerText;
+			const children = [...element.children] as HTMLElement[];
+			children.forEach((el) => {
+				const readout = getReadout(el);
+				if (readout !== '') return readout;
+			});
 			break;
 		case 'p':
 			elementName = 'text';
