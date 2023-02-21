@@ -1,5 +1,6 @@
 import { playSound } from './audioPlayer';
 import { getBias, getElementInDirection, getElementMidpoint } from './elementUtils';
+import { initializeNavigationListeners, setLastFocusedElement } from './navigation';
 import { getReadout } from './textContent';
 
 console.log('%cSpatial Interactions Extension: Content script loaded!', 'color: green; font-style: bold');
@@ -15,61 +16,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 	}
 });
 
-let lastFocusedElement: HTMLElement | undefined;
-const maxNavAttempts = screen.height / 10;
-document.addEventListener('keydown', async (e) => {
-	// console.log(e); (Logs keyboard events)
-
-	let nextEl: HTMLElement | undefined;
-
-	switch (e.key.toLowerCase()) {
-		case 'w': // Move up
-			nextEl = getElementInDirection(lastFocusedElement, 'up', maxNavAttempts);
-
-			if (nextEl) {
-				nextEl.focus();
-
-				console.log('Clicked up; element found:', nextEl);
-			} else console.log('Clicked up; no element found.');
-			break;
-		case 'a': // Move left
-			console.log('Clicking left...');
-
-			nextEl = getElementInDirection(lastFocusedElement, 'left', maxNavAttempts);
-
-			if (nextEl) {
-				nextEl.focus();
-
-				console.log('Clicked left; element found:', nextEl);
-			} else console.log('Clicked left; no element found.');
-			break;
-		case 's': // Move right
-			nextEl = getElementInDirection(lastFocusedElement, 'down', maxNavAttempts);
-
-			if (nextEl) {
-				nextEl.focus();
-
-				console.log('Clicked down; element found:', nextEl);
-			} else console.log('Clicked down; no element found.');
-			break;
-		case 'd': // Move down
-			nextEl = getElementInDirection(lastFocusedElement, 'right', maxNavAttempts);
-
-			if (nextEl) {
-				nextEl.focus();
-
-				console.log('Clicked right; element found:', nextEl);
-			} else console.log('Clicked right; no element found.');
-			break;
-		case 'b':
-			if (e.ctrlKey || e.metaKey) {
-				// Test active element reading with Ctrl/Command + B.
-				const focusedElement = document.activeElement as HTMLElement;
-				await playSound(getBias(focusedElement), getReadout(focusedElement));
-			}
-			break;
-	}
-});
+// Set up 'WASD' navigation
+initializeNavigationListeners();
 
 // Detects which element is currently being focused on and gives it a border
 let lastBorder = '';
@@ -77,7 +25,7 @@ document.addEventListener(
 	'focusin',
 	() => {
 		const activeElement = document.activeElement as HTMLElement;
-		lastFocusedElement = activeElement;
+		setLastFocusedElement(activeElement);
 
 		lastBorder = activeElement.style.border ?? '';
 		activeElement.style.border = '2px solid #00d0ff';

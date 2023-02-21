@@ -4,6 +4,8 @@ const logElementDetails = true;
  * Returns the text the voiceover should read out
  */
 export function getReadout(element: HTMLElement): string {
+	if (!element) return '';
+
 	// Should the TTS read out the element name first or the element contents first?
 	let elementFirst = true;
 	let elementName = '';
@@ -48,6 +50,9 @@ export function getReadout(element: HTMLElement): string {
 
 			elementContent = element.innerText;
 			break;
+		case 'li':
+			elementContent = element.innerText;
+			break;
 		case 'p':
 			elementName = 'text';
 
@@ -60,6 +65,10 @@ export function getReadout(element: HTMLElement): string {
 			elementName = 'image';
 			if (!labelledByOtherElement) elementContent = element.getAttribute('alt') ?? '';
 			break;
+		case 'input':
+			elementName = 'input';
+			if (!labelledByOtherElement && (elementContent == '' || !elementContent)) elementContent = element.getAttribute('placeholder') ?? '';
+			break;
 		case 'button':
 			elementFirst = false;
 
@@ -67,7 +76,7 @@ export function getReadout(element: HTMLElement): string {
 			if (!labelledByOtherElement) elementContent = element.innerText ?? '';
 			break;
 		default:
-			console.warn('unknown element type: "' + element.tagName.toLowerCase().trim() + '" element:', element);
+			// console.warn('unknown element type: "' + element.tagName.toLowerCase().trim() + '" element:', element);
 			// If dealing with element not listed, turn to aria-label
 			elementContent = element.getAttribute('aria-label');
 
