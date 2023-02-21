@@ -29,6 +29,8 @@ export function getElementMidpoint(element: HTMLElement) {
 	return { x: rect.left + rect.width / 2, y: rect.bottom - rect.height / 2 };
 }
 
+const baseBuffer = 5;
+let buffer = baseBuffer; //px
 export function getElementStartingPoints(element: HTMLElement, dir: string) {
 	if (!element) {
 		console.error("Provided element doesn't exist.");
@@ -37,30 +39,32 @@ export function getElementStartingPoints(element: HTMLElement, dir: string) {
 
 	const rect = element.getBoundingClientRect();
 
+	buffer = baseBuffer + rect.height / 100;
+
 	switch (dir) {
 		case 'left':
 			return [
-				{ x: rect.left, y: rect.bottom },
+				{ x: rect.left, y: rect.bottom - buffer },
 				{ x: rect.left, y: rect.bottom - rect.height / 2 },
-				{ x: rect.left, y: rect.top }
+				{ x: rect.left, y: rect.top + buffer }
 			];
 		case 'right':
 			return [
-				{ x: rect.right, y: rect.bottom },
+				{ x: rect.right, y: rect.bottom - buffer },
 				{ x: rect.right, y: rect.bottom - rect.height / 2 },
-				{ x: rect.right, y: rect.top }
+				{ x: rect.right, y: rect.top + buffer }
 			];
 		case 'up':
 			return [
-				{ x: rect.left, y: rect.top },
+				{ x: rect.left + buffer, y: rect.top },
 				{ x: rect.left + rect.width / 2, y: rect.top },
-				{ x: rect.right, y: rect.top }
+				{ x: rect.right - buffer, y: rect.top }
 			];
 		case 'down':
 			return [
-				{ x: rect.left, y: rect.bottom },
+				{ x: rect.left + buffer, y: rect.bottom },
 				{ x: rect.left + rect.width / 2, y: rect.bottom },
-				{ x: rect.right, y: rect.bottom }
+				{ x: rect.right - buffer, y: rect.bottom }
 			];
 		default:
 			console.error('Unknown direction:', dir);
@@ -120,6 +124,7 @@ export function getElementInDirection(startingElement: HTMLElement | undefined, 
 
 	nextEl = startingElement;
 	let validElements: HTMLElement[] = [];
+
 	while (validElements.length === 0) {
 		validElements = elementsFromPoints(startingPoints).filter((el) => worthNavigatingTo(startingElement, el, dir));
 
@@ -150,6 +155,17 @@ export function getElementInDirection(startingElement: HTMLElement | undefined, 
 
 		if (attempts++ > maxAttempts) return undefined;
 	}
+
+	// Sort valid elements depending on proximity to certain extremities
+	// e.g. if searching left/right, the topmost element should be ordered first. If searching up/down, the leftmost element should be ordered first
+	if (dir === 'left' || dir === 'right')
+		validElements.sort((a, b) => {
+			return getElementMidpoint(a).y - getElementMidpoint(b).y;
+		});
+	else if (dir === 'up' || dir === 'down')
+		validElements.sort((a, b) => {
+			return getElementMidpoint(a).x - getElementMidpoint(b).x;
+		});
 
 	nextEl = validElements[0];
 
