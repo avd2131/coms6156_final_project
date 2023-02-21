@@ -107,6 +107,9 @@ function elementsFromPoints(points: { x: number; y: number }[]) {
 	return elements;
 }
 
+/** Gets element in a certain direction (up, down, left, right)
+ * - Element is only detected if readable by `getReadout()` in textContent.ts
+ */
 export function getElementInDirection(startingElement: HTMLElement | undefined, dir: string, maxAttempts: number): HTMLElement | undefined {
 	let nextEl: HTMLElement | undefined;
 	let attempts = 0;
@@ -119,8 +122,6 @@ export function getElementInDirection(startingElement: HTMLElement | undefined, 
 	let validElements: HTMLElement[] = [];
 	while (validElements.length === 0) {
 		validElements = elementsFromPoints(startingPoints).filter((el) => worthNavigatingTo(startingElement, el, dir));
-
-		console.log('Valid elements: ', validElements);
 
 		switch (dir) {
 			case 'left':
@@ -156,6 +157,7 @@ export function getElementInDirection(startingElement: HTMLElement | undefined, 
 	return nextEl;
 }
 
+/** Determines if two elements are related to each other (returns true if `firstElement` is a parent/child of `secondElement`) */
 function elementsRelated(firstElement: HTMLElement, secondElement: HTMLElement) {
 	return firstElement.contains(secondElement) || secondElement.contains(firstElement);
 }

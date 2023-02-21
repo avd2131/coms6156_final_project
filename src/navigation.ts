@@ -1,5 +1,6 @@
 import { playSound } from './audioPlayer';
 import { getBias, getElementInDirection } from './elementUtils';
+import { verticalScrollStatus } from './scroll';
 import { getReadout } from './textContent';
 
 let lastFocusedElement: HTMLElement | undefined;
@@ -17,44 +18,58 @@ export function initializeNavigationListeners() {
 
 		let nextEl: HTMLElement | undefined;
 
+		if (!lastFocusedElement) return;
+
 		switch (e.key.toLowerCase()) {
 			case 'w': // Move up
 				nextEl = getElementInDirection(lastFocusedElement, 'up', maxNavAttempts);
 
 				if (nextEl) {
+					// Element found
 					nextEl.focus();
+				} else {
+					// No element found
+					if (verticalScrollStatus !== 'top') {
+						// Scroll up and try looking for elements again
+						window.scrollBy(0, -50);
 
-					console.log('Clicked up; element found:', nextEl);
-				} else console.log('Clicked up; no element found.');
+						document.dispatchEvent(new KeyboardEvent('keydown', { key: 'w' }));
+					}
+				}
 				break;
 			case 'a': // Move left
-				console.log('Clicking left...');
-
 				nextEl = getElementInDirection(lastFocusedElement, 'left', maxNavAttempts);
 
 				if (nextEl) {
+					// Element found
 					nextEl.focus();
-
-					console.log('Clicked left; element found:', nextEl);
-				} else console.log('Clicked left; no element found.');
+				}
 				break;
-			case 's': // Move right
+			case 's': // Move down
 				nextEl = getElementInDirection(lastFocusedElement, 'down', maxNavAttempts);
 
 				if (nextEl) {
+					// Element found
 					nextEl.focus();
+				} else {
+					// No element found
+					console.log('vertical scroll status:', verticalScrollStatus);
 
-					console.log('Clicked down; element found:', nextEl, '; equal:', nextEl === lastFocusedElement);
-				} else console.log('Clicked down; no element found.');
+					if (verticalScrollStatus !== 'bottom') {
+						// Scroll down and try looking for elements again
+						window.scrollBy(0, 50);
+
+						document.dispatchEvent(new KeyboardEvent('keydown', { key: 's' }));
+					}
+				}
 				break;
-			case 'd': // Move down
+			case 'd': // Move right
 				nextEl = getElementInDirection(lastFocusedElement, 'right', maxNavAttempts);
 
 				if (nextEl) {
+					// Element found
 					nextEl.focus();
-
-					console.log('Clicked right; element found:', nextEl);
-				} else console.log('Clicked right; no element found.');
+				}
 				break;
 			case 'b':
 				if (e.ctrlKey || e.metaKey) {
