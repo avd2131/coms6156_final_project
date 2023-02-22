@@ -29,7 +29,7 @@ export function initializeNavigationListeners() {
 					nextEl.focus();
 				} else {
 					// No element found
-					if (verticalScrollStatus !== 'top') {
+					if (verticalScrollStatus !== 'top' && verticalScrollStatus !== 'noscroll') {
 						// Scroll up and try looking for elements again
 						window.scrollBy(0, -50);
 
@@ -53,9 +53,7 @@ export function initializeNavigationListeners() {
 					nextEl.focus();
 				} else {
 					// No element found
-					console.log('vertical scroll status:', verticalScrollStatus);
-
-					if (verticalScrollStatus !== 'bottom') {
+					if (verticalScrollStatus !== 'bottom' && verticalScrollStatus !== 'noscroll') {
 						// Scroll down and try looking for elements again
 						window.scrollBy(0, 50);
 
