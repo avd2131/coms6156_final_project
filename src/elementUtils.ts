@@ -100,15 +100,16 @@ export function worthNavigatingTo(startingElement: HTMLElement, destinationEleme
 function elementsFromPoints(points: { x: number; y: number }[]) {
 	const elements: HTMLElement[] = [];
 
-	points.forEach((point) => {
-		const elementsAtPoint = document.elementsFromPoint(point.x, point.y) as HTMLElement[];
+	points.forEach((point, i) => {
+		const elementAtPoint = document.elementFromPoint(point.x, point.y) as HTMLElement;
 
-		elementsAtPoint.forEach((el) => {
-			elements.push(el);
-		});
+		// console.log(`Point ${i}:`, points[i], '; element:', elementAtPoint);
+
+		if (elementAtPoint) elements.push(elementAtPoint);
 	});
 
-	return elements;
+	// Remove duplicates
+	return elements.filter((el, i) => elements.indexOf(el) === i);
 }
 
 /** Gets element in a certain direction (up, down, left, right)
@@ -168,6 +169,8 @@ export function getElementInDirection(startingElement: HTMLElement | undefined, 
 		});
 
 	nextEl = validElements[0];
+
+	console.log('Valid elements:', validElements, 'Chosen element:', nextEl);
 
 	nextEl?.setAttribute('tabindex', '-1');
 	return nextEl;

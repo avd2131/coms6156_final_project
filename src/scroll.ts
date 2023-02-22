@@ -9,5 +9,5 @@ document.addEventListener('scroll', (e) => {
 
 	if (window.scrollY === 0) verticalScrollStatus = 'top';
 
-	console.log('scrolled:', verticalScrollStatus);
+	// console.log('Scrolled. Scroll status:', verticalScrollStatus);
 });

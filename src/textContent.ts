@@ -1,4 +1,4 @@
-const logElementDetails = true;
+const logElementDetails = false;
 
 /**
  * Returns the text the voiceover should read out
@@ -73,6 +73,8 @@ export function getReadout(element: HTMLElement): string {
 
 			elementContent = element.innerText;
 			break;
+		case 'path':
+			if (element.parentElement?.tagName.toLowerCase() === 'path') return getReadout(element.parentElement);
 		case 'svg':
 		case 'img':
 			elementFirst = false;
