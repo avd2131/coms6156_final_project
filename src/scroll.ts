@@ -1,9 +1,6 @@
 export let verticalScrollStatus = 'top';
 
-if (window.innerHeight === document.body.scrollHeight) verticalScrollStatus = 'noscroll';
-
-// Detects if at the top/bottom of screen when scrolling
-document.addEventListener('scroll', (e) => {
+function updateScrollStatus() {
 	if (window.innerHeight + window.scrollY >= document.body.scrollHeight) {
 		// At bottom of page
 		verticalScrollStatus = 'bottom';
@@ -11,5 +8,18 @@ document.addEventListener('scroll', (e) => {
 
 	if (window.scrollY === 0) verticalScrollStatus = 'top';
 
+	if (window.innerHeight === document.body.scrollHeight) verticalScrollStatus = 'noscroll';
+
 	// console.log('Scrolled. Scroll status:', verticalScrollStatus);
+}
+
+updateScrollStatus();
+
+// Detects if at the top/bottom of screen when scrolling
+document.addEventListener('scroll', (e) => {
+	updateScrollStatus();
+});
+
+window.addEventListener('resize', () => {
+	updateScrollStatus();
 });
