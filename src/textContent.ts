@@ -65,6 +65,15 @@ export function getReadout(element: HTMLElement): string {
 			// }
 
 			return '';
+		case 'div':
+			if (element.innerHTML != '' && !element.innerHTML.includes('<')) {
+				// If the div contains just text (no child elements), treat it as a normal p element.
+				elementName = 'group';
+
+				elementFirst = false;
+
+				elementContent = element.textContent;
+			} else return '';
 			break;
 		case 'span':
 			if (element.innerText === '') return '';

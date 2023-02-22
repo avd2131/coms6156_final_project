@@ -103,7 +103,7 @@ function elementsFromPoints(points: { x: number; y: number }[]) {
 	points.forEach((point, i) => {
 		const elementAtPoint = document.elementFromPoint(point.x, point.y) as HTMLElement;
 
-		// console.log(`Point ${i}:`, points[i], '; element:', elementAtPoint);
+		console.log(`Point ${i}:`, points[i], '; element:', elementAtPoint);
 
 		if (elementAtPoint) elements.push(elementAtPoint);
 	});
