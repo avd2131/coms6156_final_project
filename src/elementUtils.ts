@@ -9,10 +9,7 @@ export function getBias(element: HTMLElement, roundToTenth = true): { x: number;
 	const bias = { x: midpoint.x / window.innerWidth, y: midpoint.y / window.innerHeight };
 
 	let xBias = -1 + 2 * bias.x;
-	let yBias = 1 - 2 * bias.y;
-
-	// If the element is not on screen, set the yBias to 0. This can easily be changed if we ever want to handle this edge case differently
-	if (yBias > 1 || yBias < -1) yBias = 0;
+	let yBias = Math.min(Math.max(1 - 2 * bias.y, -1), 1); // Clamps yBias between -1 and 1. If the element is off screen in any vertical direction, its bias will be limited to -1 or 1.
 
 	if (roundToTenth) {
 		xBias = Math.round(xBias * 10) / 10;
