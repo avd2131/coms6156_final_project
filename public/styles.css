@@ -1,3 +1,15 @@
 h3 {
 	white-space: nowrap;
 }
+
+.checkbox-wrapper {
+	height: 25px;
+
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+#spatializeFeedbackCheckboxWrapper {
+	margin-left: 15px;
+}
