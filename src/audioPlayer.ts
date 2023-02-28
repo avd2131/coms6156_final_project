@@ -37,6 +37,10 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
 	// Don't waste any resources with empty strings.
 	if (text === '') return;
 
+	if (text === '_scroll-indicator_') {
+		// Special behavior to play scroll sound
+	}
+
 	if (!audioCtx) {
 		audioCtx = new AudioContext();
 		panner = audioCtx.createPanner();
