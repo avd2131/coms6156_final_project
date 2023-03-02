@@ -1,9 +1,24 @@
+import { getArrayBuffer, getFile } from './fileUtils';
+
 let audioCtx: AudioContext | undefined;
 let panner: PannerNode | undefined;
 
 const meSpeak = require('mespeak');
 meSpeak.loadConfig(require('../public/mespeak-config.json'));
 meSpeak.loadVoice(require('mespeak/voices/en/en-us.json'));
+
+const beepFileURL = require('../public/beep.mp3');
+let beepArrayBuffer: ArrayBuffer;
+let beepAudioBuffer: AudioBuffer;
+
+// getFile(beepFileURL, 'temp').then((value) => {
+// 	beepFile = value;
+// 	console.log('beep file loaded');
+// });
+
+getArrayBuffer(beepFileURL).then((buffer) => {
+	beepArrayBuffer = buffer;
+});
 
 let pitchConst = 350;
 
@@ -37,13 +52,20 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
 	// Don't waste any resources with empty strings.
 	if (text === '') return;
 
+	let playBeep = false;
 	if (text === '_scroll-indicator_') {
 		// Special behavior to play scroll sound
+		// Royalty free beep: https://samplefocus.com/samples/short-beep
+		playBeep = true;
 	}
+
+	// console.log('play beep:', playBeep, beepFile);
 
 	if (!audioCtx) {
 		audioCtx = new AudioContext();
 		panner = audioCtx.createPanner();
+
+		beepAudioBuffer = await audioCtx.decodeAudioData(beepArrayBuffer);
 	}
 
 	console.log('Spatial Audio', spatialAudioEnabled);
@@ -69,7 +91,13 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
 		// source.buffer = await audioCtx.decodeAudioData(await audioFile.arrayBuffer());
 
 		// Using MeSpeak
-		source.buffer = await audioCtx!.decodeAudioData(meSpeak.speak(text, { rawdata: true }));
+		if (!playBeep) source.buffer = await audioCtx!.decodeAudioData(meSpeak.speak(text, { rawdata: true }));
+		else {
+			console.log('Emit beep!');
+
+			if (!beepArrayBuffer) console.error('There was an error in loading the beep sound file.');
+			else source.buffer = beepAudioBuffer;
+		}
 
 		source.onended = () => {
 			lastSoundSource = undefined;

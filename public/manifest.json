@@ -21,6 +21,8 @@
 		}
 	],
 
+	"web_accessible_resources": [{ "resources": ["*.mp3"], "matches": ["<all_urls>"] }],
+
 	"background": {
 		"service_worker": "js/background.js"
 	},
