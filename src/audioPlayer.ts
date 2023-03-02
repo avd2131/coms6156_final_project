@@ -1,20 +1,17 @@
-import { getArrayBuffer, getFile } from './fileUtils';
+import { getArrayBuffer } from './fileUtils';
 
 let audioCtx: AudioContext | undefined;
 let panner: PannerNode | undefined;
 
+// MeSpeak
 const meSpeak = require('mespeak');
 meSpeak.loadConfig(require('../public/mespeak-config.json'));
 meSpeak.loadVoice(require('mespeak/voices/en/en-us.json'));
 
+// Scroll Indicator
 const beepFileURL = require('../public/beep.mp3');
 let beepArrayBuffer: ArrayBuffer;
 let beepAudioBuffer: AudioBuffer;
-
-// getFile(beepFileURL, 'temp').then((value) => {
-// 	beepFile = value;
-// 	console.log('beep file loaded');
-// });
 
 getArrayBuffer(beepFileURL).then((buffer) => {
 	beepArrayBuffer = buffer;
@@ -68,8 +65,6 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
 		beepAudioBuffer = await audioCtx.decodeAudioData(beepArrayBuffer);
 	}
 
-	console.log('Spatial Audio', spatialAudioEnabled);
-
 	return new Promise(async (resolve, reject) => {
 		await audioCtx!.resume();
 
@@ -93,8 +88,6 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
 		// Using MeSpeak
 		if (!playBeep) source.buffer = await audioCtx!.decodeAudioData(meSpeak.speak(text, { rawdata: true }));
 		else {
-			console.log('Emit beep!');
-
 			if (!beepArrayBuffer) console.error('There was an error in loading the beep sound file.');
 			else source.buffer = beepAudioBuffer;
 		}

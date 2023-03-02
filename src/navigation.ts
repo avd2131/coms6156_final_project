@@ -42,11 +42,14 @@ export function initializeNavigationListeners() {
 					lastInteraction = 'element';
 				} else {
 					// No element found
+
 					if (verticalScrollStatus !== 'top' && verticalScrollStatus !== 'noscroll') {
 						// Scroll up and try looking for elements again
 						lastInteraction = 'scroll';
 
 						window.scrollBy(0, -50);
+
+						await sleep(20);
 
 						document.dispatchEvent(new KeyboardEvent('keydown', { key: 'w' }));
 					}
@@ -89,6 +92,8 @@ export function initializeNavigationListeners() {
 
 						window.scrollBy(0, 50);
 
+						await sleep(20);
+
 						document.dispatchEvent(new KeyboardEvent('keydown', { key: 's' }));
 					}
 				}
@@ -113,3 +118,7 @@ export function initializeNavigationListeners() {
 		}
 	});
 }
+
+const sleep = (ms: number) => {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+};
