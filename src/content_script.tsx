@@ -1,4 +1,7 @@
-import { initializeNavigationListeners, setLastFocusedElement } from './navigation';
+import { playSound } from './audioPlayer';
+import { getBias } from './elementUtils';
+import { initializeNavigationListeners, lastFocusedElement, setLastFocusedElement } from './navigation';
+import { getReadout } from './textContent';
 
 console.log('%cSpatial Interactions Extension: Content script loaded!', 'color: green; font-style: bold');
 
@@ -17,15 +20,28 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 initializeNavigationListeners();
 
 // Detects which element is currently being focused on and gives it a border
+let lastScrollYPos = window.scrollY;
 let lastBorder = '';
 document.addEventListener(
 	'focusin',
-	() => {
+	async () => {
+		console.log('New element focused:', window.scrollY, lastScrollYPos);
+
+		if (window.scrollY != lastScrollYPos) {
+			const { scrollFeedback, spatializeFeedback } = await getScrollSoundSettings();
+
+			if (scrollFeedback) await playSound(spatializeFeedback ? { x: getBias(lastFocusedElement!).x, y: -1 } : { x: 0, y: 0 }, '_scroll-indicator_');
+		}
+
 		const activeElement = document.activeElement as HTMLElement;
 		setLastFocusedElement(activeElement);
 
+		playSound(getBias(activeElement), getReadout(activeElement));
+
 		lastBorder = activeElement.style.border ?? '';
 		activeElement.style.border = '2px solid #00d0ff';
+
+		lastScrollYPos = window.scrollY;
 	},
 	true
 );
@@ -38,3 +54,11 @@ document.addEventListener(
 	},
 	true
 );
+
+function getScrollSoundSettings(): Promise<{ scrollFeedback: boolean; spatializeFeedback: boolean }> {
+	return new Promise((resolve) => {
+		chrome.storage.sync.get(['scrollFeedback', 'spatializeFeedback'], (items) => {
+			resolve((items as { scrollFeedback: boolean; spatializeFeedback: boolean }) ?? { scrollFeedback: false, spatializeFeedback: false });
+		});
+	});
+}
