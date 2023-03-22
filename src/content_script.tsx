@@ -27,16 +27,18 @@ document.addEventListener(
 	async () => {
 		console.log('New element focused:', window.scrollY, lastScrollYPos);
 
-		if (window.scrollY != lastScrollYPos) {
-			const { scrollFeedback, spatializeFeedback } = await getScrollSoundSettings();
+		const { scrollFeedback, spatializeFeedback, mute } = await getScrollSoundSettings();
 
-			if (scrollFeedback) await playSound(spatializeFeedback ? { x: getBias(lastFocusedElement!).x, y: -1 } : { x: 0, y: 0 }, '_scroll-indicator_');
+		if (window.scrollY != lastScrollYPos) {
+			if (scrollFeedback && !mute) await playSound(spatializeFeedback ? { x: getBias(lastFocusedElement!).x, y: -1 } : { x: 0, y: 0 }, '_scroll-indicator_');
 		}
 
 		const activeElement = document.activeElement as HTMLElement;
 		setLastFocusedElement(activeElement);
 
-		playSound(getBias(activeElement), getReadout(activeElement));
+		console.log('New focused element: Muted?:', mute);
+
+		if (!mute) playSound(getBias(activeElement), getReadout(activeElement));
 
 		lastBorder = activeElement.style.border ?? '';
 		activeElement.style.border = '2px solid #00d0ff';
@@ -55,10 +57,10 @@ document.addEventListener(
 	true
 );
 
-function getScrollSoundSettings(): Promise<{ scrollFeedback: boolean; spatializeFeedback: boolean }> {
+function getScrollSoundSettings(): Promise<{ scrollFeedback: boolean; spatializeFeedback: boolean; mute: boolean }> {
 	return new Promise((resolve) => {
-		chrome.storage.sync.get(['scrollFeedback', 'spatializeFeedback'], (items) => {
-			resolve((items as { scrollFeedback: boolean; spatializeFeedback: boolean }) ?? { scrollFeedback: false, spatializeFeedback: false });
+		chrome.storage.sync.get(['scrollFeedback', 'spatializeFeedback', 'mute'], (items) => {
+			resolve((items as { scrollFeedback: boolean; spatializeFeedback: boolean; mute: boolean }) ?? { scrollFeedback: false, spatializeFeedback: false, mute: false });
 		});
 	});
 }

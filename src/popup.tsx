@@ -4,16 +4,19 @@ import ReactDOM from 'react-dom';
 const Popup = () => {
 	const [scrollFeedback, setScrollFeedback] = useState<boolean>(false);
 	const [spatializeFeedback, setSpatializeFeedback] = useState<boolean>(false);
+	const [mute, setMute] = useState<boolean>(false);
 
 	useEffect(() => {
 		chrome.storage.sync.get(
 			{
 				scrollFeedback: scrollFeedback,
-				spatializeFeedback: spatializeFeedback
+				spatializeFeedback: spatializeFeedback,
+				mute: mute
 			},
 			(items) => {
 				setScrollFeedback(items.scrollFeedback);
 				setSpatializeFeedback(items.spatializeFeedback);
+				setMute(items.mute);
 			}
 		);
 	}, []);
@@ -23,7 +26,8 @@ const Popup = () => {
 		chrome.storage.sync.set(
 			{
 				scrollFeedback: scrollFeedback,
-				spatializeFeedback: spatializeFeedback
+				spatializeFeedback: spatializeFeedback,
+				mute: mute
 			},
 			() => {
 				console.log('Options saved.');
@@ -37,6 +41,16 @@ const Popup = () => {
 		<>
 			<h3>Spatial Interactions Extension</h3>
 			<div id='settings'>
+				<div id='muteCheckboxWrapper' className='checkbox-wrapper'>
+					<input
+						type='checkbox'
+						checked={mute}
+						onChange={() => {
+							setMute(!mute);
+						}}
+					/>
+					<p>Mute</p>
+				</div>
 				<div id='scrollFeedbackCheckboxWrapper' className='checkbox-wrapper'>
 					<input
 						type='checkbox'

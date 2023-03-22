@@ -167,6 +167,25 @@ export function getElementInDirection(startingElement: HTMLElement | undefined, 
 
 	nextEl = validElements[0];
 
+	/*const rect = startingElement.getBoundingClientRect();
+
+	switch (dir) {
+		case 'left':
+			nextEl = getElementInRegion(-1, rect.left, rect.bottom, rect.top);
+			break;
+		case 'up':
+			// y-coordinate is reversed in web
+			nextEl = getElementInRegion(rect.left, rect.right, -1, rect.bottom);
+			break;
+		case 'right':
+			nextEl = getElementInRegion(rect.right, -1, rect.bottom, rect.top);
+			break;
+		case 'down':
+			// y-coordinate is reversed in web
+			nextEl = getElementInRegion(rect.left, rect.right, rect.bottom, -1);
+			break;
+	}*/
+
 	console.log('Valid elements:', validElements, 'Chosen element:', nextEl);
 
 	nextEl?.setAttribute('tabindex', '-1');
@@ -176,4 +195,21 @@ export function getElementInDirection(startingElement: HTMLElement | undefined, 
 /** Determines if two elements are related to each other (returns true if `firstElement` is a parent/child of `secondElement`) */
 function elementsRelated(firstElement: HTMLElement, secondElement: HTMLElement) {
 	return firstElement.contains(secondElement) || secondElement.contains(firstElement);
+}
+
+function getElementInRegion(minX: number, maxX: number, topY: number, bottomY: number, interval = 5): HTMLElement | undefined {
+	if (minX === -1) minX = 0;
+	if (maxX === -1) maxX = window.innerWidth;
+	if (topY === -1) topY = 0;
+	if (bottomY === -1) bottomY = window.innerHeight;
+
+	for (let x = minX; x <= maxX; x += interval) {
+		for (let y = bottomY; y >= topY; y -= interval) {
+			const elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
+
+			if (elementAtPoint) return elementAtPoint;
+		}
+	}
+
+	return undefined;
 }
