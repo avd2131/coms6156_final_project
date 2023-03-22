@@ -79,15 +79,25 @@ export function worthNavigatingTo(startingElement: HTMLElement, destinationEleme
 	switch (dir) {
 		case 'up':
 			if (startElRect.top < destElRect.top) return false; // If the top border of the destination element is lower/equal to than the current element's top border, don't mark this the destination element as worth navigating to. Same logic extends to the other three cases.
+
+			if (startElRect.top == destElRect.top && Math.abs(destElRect.right - startElRect.left) < acceptableEdgeDistance) return false;
 			break;
 		case 'down':
 			if (startElRect.bottom > destElRect.bottom) return false;
+
+			if (startElRect.bottom == destElRect.bottom && Math.abs(destElRect.right - startElRect.left) < acceptableEdgeDistance) return false;
 			break;
 		case 'left':
 			if (startElRect.left < destElRect.left) return false;
+
+			if (startElRect.left == destElRect.left && Math.abs(destElRect.top - startElRect.bottom) < acceptableEdgeDistance) return false;
+			if (startElRect.right == destElRect.right && Math.abs(destElRect.top - startElRect.bottom) < acceptableEdgeDistance) return false;
 			break;
 		case 'right':
 			if (startElRect.right > destElRect.right) return false;
+
+			if (startElRect.left == destElRect.left && Math.abs(destElRect.top - startElRect.bottom) < acceptableEdgeDistance) return false;
+			if (startElRect.right == destElRect.right && Math.abs(destElRect.top - startElRect.bottom) < acceptableEdgeDistance) return false;
 			break;
 	}
 
@@ -112,60 +122,13 @@ function elementsFromPoints(points: { x: number; y: number }[]) {
 /** Gets element in a certain direction (up, down, left, right)
  * - Element is only detected if readable by `getReadout()` in textContent.ts
  */
-export function getElementInDirection(startingElement: HTMLElement | undefined, dir: string, maxAttempts: number): HTMLElement | undefined {
+export function getElementInDirection(startingElement: HTMLElement | undefined, dir: string): HTMLElement | undefined {
 	let nextEl: HTMLElement | undefined;
-	let attempts = 0;
 
 	if (!startingElement) return undefined;
 
-	let startingPoints = getElementStartingPoints(startingElement, dir)!;
-
 	nextEl = startingElement;
 	let validElements: HTMLElement[] = [];
-
-	// while (validElements.length === 0) {
-	// 	validElements = elementsFromPoints(startingPoints).filter((el) => worthNavigatingTo(startingElement, el, dir));
-
-	// 	switch (dir) {
-	// 		case 'left':
-	// 			startingPoints.forEach((pt) => {
-	// 				pt.x -= 10;
-	// 			});
-	// 			break;
-	// 		case 'up':
-	// 			// y-coordinate is reversed in web
-	// 			startingPoints.forEach((pt) => {
-	// 				pt.y -= 10;
-	// 			});
-	// 			break;
-	// 		case 'right':
-	// 			startingPoints.forEach((pt) => {
-	// 				pt.x += 10;
-	// 			});
-	// 			break;
-	// 		case 'down':
-	// 			// y-coordinate is reversed in web
-	// 			startingPoints.forEach((pt) => {
-	// 				pt.y += 10;
-	// 			});
-	// 			break;
-	// 	}
-
-	// 	if (attempts++ > maxAttempts) return undefined;
-	// }
-
-	// // Sort valid elements depending on proximity to certain extremities
-	// // e.g. if searching left/right, the topmost element should be ordered first. If searching up/down, the leftmost element should be ordered first
-	// if (dir === 'left' || dir === 'right')
-	// 	validElements.sort((a, b) => {
-	// 		return getElementMidpoint(a).y - getElementMidpoint(b).y;
-	// 	});
-	// else if (dir === 'up' || dir === 'down')
-	// 	validElements.sort((a, b) => {
-	// 		return getElementMidpoint(a).x - getElementMidpoint(b).x;
-	// 	});
-
-	// nextEl = validElements[0];
 
 	const rect = startingElement.getBoundingClientRect();
 
