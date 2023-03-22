@@ -78,16 +78,16 @@ export function worthNavigatingTo(startingElement: HTMLElement, destinationEleme
 
 	switch (dir) {
 		case 'up':
-			if (Math.abs(startElRect.top - destElRect.top) < acceptableEdgeDistance) return false;
+			if (startElRect.top < destElRect.top) return false; // If the top border of the destination element is lower/equal to than the current element's top border, don't mark this the destination element as worth navigating to. Same logic extends to the other three cases.
 			break;
 		case 'down':
-			if (Math.abs(startElRect.bottom - destElRect.bottom) < acceptableEdgeDistance) return false;
+			if (startElRect.bottom > destElRect.bottom) return false;
 			break;
 		case 'left':
-			if (Math.abs(startElRect.left - destElRect.left) < acceptableEdgeDistance) return false;
+			if (startElRect.left < destElRect.left) return false;
 			break;
 		case 'right':
-			if (Math.abs(startElRect.right - destElRect.right) < acceptableEdgeDistance) return false;
+			if (startElRect.right > destElRect.right) return false;
 			break;
 	}
 
@@ -123,68 +123,68 @@ export function getElementInDirection(startingElement: HTMLElement | undefined, 
 	nextEl = startingElement;
 	let validElements: HTMLElement[] = [];
 
-	while (validElements.length === 0) {
-		validElements = elementsFromPoints(startingPoints).filter((el) => worthNavigatingTo(startingElement, el, dir));
+	// while (validElements.length === 0) {
+	// 	validElements = elementsFromPoints(startingPoints).filter((el) => worthNavigatingTo(startingElement, el, dir));
 
-		switch (dir) {
-			case 'left':
-				startingPoints.forEach((pt) => {
-					pt.x -= 10;
-				});
-				break;
-			case 'up':
-				// y-coordinate is reversed in web
-				startingPoints.forEach((pt) => {
-					pt.y -= 10;
-				});
-				break;
-			case 'right':
-				startingPoints.forEach((pt) => {
-					pt.x += 10;
-				});
-				break;
-			case 'down':
-				// y-coordinate is reversed in web
-				startingPoints.forEach((pt) => {
-					pt.y += 10;
-				});
-				break;
-		}
+	// 	switch (dir) {
+	// 		case 'left':
+	// 			startingPoints.forEach((pt) => {
+	// 				pt.x -= 10;
+	// 			});
+	// 			break;
+	// 		case 'up':
+	// 			// y-coordinate is reversed in web
+	// 			startingPoints.forEach((pt) => {
+	// 				pt.y -= 10;
+	// 			});
+	// 			break;
+	// 		case 'right':
+	// 			startingPoints.forEach((pt) => {
+	// 				pt.x += 10;
+	// 			});
+	// 			break;
+	// 		case 'down':
+	// 			// y-coordinate is reversed in web
+	// 			startingPoints.forEach((pt) => {
+	// 				pt.y += 10;
+	// 			});
+	// 			break;
+	// 	}
 
-		if (attempts++ > maxAttempts) return undefined;
-	}
+	// 	if (attempts++ > maxAttempts) return undefined;
+	// }
 
-	// Sort valid elements depending on proximity to certain extremities
-	// e.g. if searching left/right, the topmost element should be ordered first. If searching up/down, the leftmost element should be ordered first
-	if (dir === 'left' || dir === 'right')
-		validElements.sort((a, b) => {
-			return getElementMidpoint(a).y - getElementMidpoint(b).y;
-		});
-	else if (dir === 'up' || dir === 'down')
-		validElements.sort((a, b) => {
-			return getElementMidpoint(a).x - getElementMidpoint(b).x;
-		});
+	// // Sort valid elements depending on proximity to certain extremities
+	// // e.g. if searching left/right, the topmost element should be ordered first. If searching up/down, the leftmost element should be ordered first
+	// if (dir === 'left' || dir === 'right')
+	// 	validElements.sort((a, b) => {
+	// 		return getElementMidpoint(a).y - getElementMidpoint(b).y;
+	// 	});
+	// else if (dir === 'up' || dir === 'down')
+	// 	validElements.sort((a, b) => {
+	// 		return getElementMidpoint(a).x - getElementMidpoint(b).x;
+	// 	});
 
-	nextEl = validElements[0];
+	// nextEl = validElements[0];
 
-	/*const rect = startingElement.getBoundingClientRect();
+	const rect = startingElement.getBoundingClientRect();
 
 	switch (dir) {
 		case 'left':
-			nextEl = getElementInRegion(-1, rect.left, rect.bottom, rect.top);
+			nextEl = getElementInRegion(startingElement, dir, -1, rect.left, rect.top, rect.bottom);
 			break;
 		case 'up':
 			// y-coordinate is reversed in web
-			nextEl = getElementInRegion(rect.left, rect.right, -1, rect.bottom);
+			nextEl = getElementInRegion(startingElement, dir, rect.left, rect.right, -1, rect.bottom);
 			break;
 		case 'right':
-			nextEl = getElementInRegion(rect.right, -1, rect.bottom, rect.top);
+			nextEl = getElementInRegion(startingElement, dir, rect.right, -1, rect.top, rect.bottom);
 			break;
 		case 'down':
 			// y-coordinate is reversed in web
-			nextEl = getElementInRegion(rect.left, rect.right, rect.bottom, -1);
+			nextEl = getElementInRegion(startingElement, dir, rect.left, rect.right, rect.top, -1);
 			break;
-	}*/
+	}
 
 	console.log('Valid elements:', validElements, 'Chosen element:', nextEl);
 
@@ -197,18 +197,89 @@ function elementsRelated(firstElement: HTMLElement, secondElement: HTMLElement) 
 	return firstElement.contains(secondElement) || secondElement.contains(firstElement);
 }
 
-function getElementInRegion(minX: number, maxX: number, topY: number, bottomY: number, interval = 5): HTMLElement | undefined {
+const detailedDebugging = false; // Turn off for better performance
+// Increase interval for lower precision, but higher performance
+function getElementInRegion(startingElement: HTMLElement, dir: string, minX: number, maxX: number, topY: number, bottomY: number, interval = 10): HTMLElement | undefined {
 	if (minX === -1) minX = 0;
 	if (maxX === -1) maxX = window.innerWidth;
 	if (topY === -1) topY = 0;
 	if (bottomY === -1) bottomY = window.innerHeight;
 
-	for (let x = minX; x <= maxX; x += interval) {
-		for (let y = bottomY; y >= topY; y -= interval) {
-			const elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
+	if (detailedDebugging) console.log(`%cRegion bounds - x: ${minX}-${maxX}; y: ${topY}-${bottomY}`, 'color: skyblue');
 
-			if (elementAtPoint) return elementAtPoint;
-		}
+	/*
+	 * Iterating y-value based on direction
+	 * - Up: bottom-up (highest to lowest y-value)
+	 * - Down: top-down (lowest to highest y-value)
+	 * - Left: top-down (lowest to highest y-value)
+	 * - Right: top-down (lowest to highest y-value)
+	 */
+
+	switch (dir) {
+		case 'left':
+			console.log(`%cWe be navigating left`, 'color: skyblue');
+
+			for (let x = maxX; x >= minX; x -= interval) {
+				for (let y = topY; y <= bottomY; y += interval) {
+					const elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
+
+					// console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
+
+					if (elementAtPoint && worthNavigatingTo(startingElement, elementAtPoint, dir)) {
+						if (detailedDebugging) console.log('Element found: ', elementAtPoint);
+						return elementAtPoint;
+					}
+				}
+			}
+			break;
+		case 'right':
+			console.log(`%cWe be navigating right`, 'color: skyblue');
+
+			for (let x = minX; x <= maxX; x += interval) {
+				for (let y = topY; y <= bottomY; y += interval) {
+					const elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
+
+					// console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
+
+					if (elementAtPoint && worthNavigatingTo(startingElement, elementAtPoint, dir)) {
+						if (detailedDebugging) console.log('Element found: ', elementAtPoint);
+						return elementAtPoint;
+					}
+				}
+			}
+			break;
+		case 'up':
+			console.log('%cWe be navigating up', 'color: skyblue');
+
+			for (let x = minX; x <= maxX; x += interval) {
+				for (let y = bottomY; y >= topY; y -= interval) {
+					const elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
+
+					//console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
+
+					if (elementAtPoint && worthNavigatingTo(startingElement, elementAtPoint, dir)) {
+						if (detailedDebugging) console.log('Element found: ', elementAtPoint);
+						return elementAtPoint;
+					}
+				}
+			}
+			break;
+		case 'down':
+			console.log('%cWe be navigating down', 'color: skyblue');
+
+			for (let x = minX; x <= maxX; x += interval) {
+				for (let y = topY; y <= bottomY; y += interval) {
+					const elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
+
+					// console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
+
+					if (elementAtPoint && worthNavigatingTo(startingElement, elementAtPoint, dir)) {
+						if (detailedDebugging) console.log('Element found: ', elementAtPoint);
+						return elementAtPoint;
+					}
+				}
+			}
+			break;
 	}
 
 	return undefined;

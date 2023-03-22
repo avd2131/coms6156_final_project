@@ -36,8 +36,6 @@ document.addEventListener(
 		const activeElement = document.activeElement as HTMLElement;
 		setLastFocusedElement(activeElement);
 
-		console.log('New focused element: Muted?:', mute);
-
 		if (!mute) playSound(getBias(activeElement), getReadout(activeElement));
 
 		lastBorder = activeElement.style.border ?? '';
