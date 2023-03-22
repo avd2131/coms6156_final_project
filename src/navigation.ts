@@ -19,8 +19,6 @@ async function navigate(key: string, fromKeypress: boolean) {
 
 	if (!lastFocusedElement) return;
 
-	console.log(attemptingNavigation, fromKeypress);
-
 	if (attemptingNavigation && fromKeypress) return;
 
 	switch (key.toLowerCase()) {

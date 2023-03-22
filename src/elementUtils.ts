@@ -78,26 +78,16 @@ export function worthNavigatingTo(startingElement: HTMLElement, destinationEleme
 
 	switch (dir) {
 		case 'up':
-			if (startElRect.top < destElRect.top) return false; // If the top border of the destination element is lower/equal to than the current element's top border, don't mark this the destination element as worth navigating to. Same logic extends to the other three cases.
-
-			if (startElRect.top == destElRect.top && Math.abs(destElRect.right - startElRect.left) < acceptableEdgeDistance) return false;
+			if (startElRect.top <= destElRect.top) return false; // If the top border of the destination element is lower/equal to than the current element's top border, don't mark this the destination element as worth navigating to. Same logic extends to the other three cases.
 			break;
 		case 'down':
-			if (startElRect.bottom > destElRect.bottom) return false;
-
-			if (startElRect.bottom == destElRect.bottom && Math.abs(destElRect.right - startElRect.left) < acceptableEdgeDistance) return false;
+			if (startElRect.bottom >= destElRect.bottom) return false;
 			break;
 		case 'left':
-			if (startElRect.left < destElRect.left) return false;
-
-			if (startElRect.left == destElRect.left && Math.abs(destElRect.top - startElRect.bottom) < acceptableEdgeDistance) return false;
-			if (startElRect.right == destElRect.right && Math.abs(destElRect.top - startElRect.bottom) < acceptableEdgeDistance) return false;
+			if (startElRect.left <= destElRect.left) return false;
 			break;
 		case 'right':
-			if (startElRect.right > destElRect.right) return false;
-
-			if (startElRect.left == destElRect.left && Math.abs(destElRect.top - startElRect.bottom) < acceptableEdgeDistance) return false;
-			if (startElRect.right == destElRect.right && Math.abs(destElRect.top - startElRect.bottom) < acceptableEdgeDistance) return false;
+			if (startElRect.right >= destElRect.right) return false;
 			break;
 	}
 
@@ -138,14 +128,14 @@ export function getElementInDirection(startingElement: HTMLElement | undefined, 
 			break;
 		case 'up':
 			// y-coordinate is reversed in web
-			nextEl = getElementInRegion(startingElement, dir, rect.left, rect.right, -1, rect.bottom);
+			nextEl = getElementInRegion(startingElement, dir, rect.left, rect.right, -1, rect.top);
 			break;
 		case 'right':
 			nextEl = getElementInRegion(startingElement, dir, rect.right, -1, rect.top, rect.bottom);
 			break;
 		case 'down':
 			// y-coordinate is reversed in web
-			nextEl = getElementInRegion(startingElement, dir, rect.left, rect.right, rect.top, -1);
+			nextEl = getElementInRegion(startingElement, dir, rect.left, rect.right, rect.bottom, -1);
 			break;
 	}
 
@@ -160,9 +150,9 @@ function elementsRelated(firstElement: HTMLElement, secondElement: HTMLElement) 
 	return firstElement.contains(secondElement) || secondElement.contains(firstElement);
 }
 
-const detailedDebugging = false; // Turn off for better performance
+const detailedDebugging = true; // Turn off for better performance
 // Increase interval for lower precision, but higher performance
-function getElementInRegion(startingElement: HTMLElement, dir: string, minX: number, maxX: number, topY: number, bottomY: number, interval = 10): HTMLElement | undefined {
+function getElementInRegion(startingElement: HTMLElement, dir: string, minX: number, maxX: number, topY: number, bottomY: number, interval = 15): HTMLElement | undefined {
 	if (minX === -1) minX = 0;
 	if (maxX === -1) maxX = window.innerWidth;
 	if (topY === -1) topY = 0;
@@ -214,14 +204,14 @@ function getElementInRegion(startingElement: HTMLElement, dir: string, minX: num
 		case 'up':
 			console.log('%cWe be navigating up', 'color: skyblue');
 
-			for (let x = minX; x <= maxX; x += interval) {
-				for (let y = bottomY; y >= topY; y -= interval) {
+			for (let y = bottomY; y >= topY; y -= interval) {
+				for (let x = minX; x <= maxX; x += interval) {
 					const elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
 
-					//console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
+					// console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
 
 					if (elementAtPoint && worthNavigatingTo(startingElement, elementAtPoint, dir)) {
-						if (detailedDebugging) console.log('Element found: ', elementAtPoint);
+						if (detailedDebugging) console.log('Element found: ', elementAtPoint, elementAtPoint.getBoundingClientRect());
 						return elementAtPoint;
 					}
 				}
@@ -230,14 +220,14 @@ function getElementInRegion(startingElement: HTMLElement, dir: string, minX: num
 		case 'down':
 			console.log('%cWe be navigating down', 'color: skyblue');
 
-			for (let x = minX; x <= maxX; x += interval) {
-				for (let y = topY; y <= bottomY; y += interval) {
+			for (let y = topY; y <= bottomY; y += interval) {
+				for (let x = minX; x <= maxX; x += interval) {
 					const elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
 
-					// console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
+					console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
 
 					if (elementAtPoint && worthNavigatingTo(startingElement, elementAtPoint, dir)) {
-						if (detailedDebugging) console.log('Element found: ', elementAtPoint);
+						if (detailedDebugging) console.log('Element found: ', elementAtPoint, elementAtPoint.getBoundingClientRect());
 						return elementAtPoint;
 					}
 				}

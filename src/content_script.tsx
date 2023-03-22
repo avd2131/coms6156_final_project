@@ -25,8 +25,6 @@ let lastBorder = '';
 document.addEventListener(
 	'focusin',
 	async () => {
-		console.log('New element focused:', window.scrollY, lastScrollYPos);
-
 		const { scrollFeedback, spatializeFeedback, mute } = await getScrollSoundSettings();
 
 		if (window.scrollY != lastScrollYPos) {
