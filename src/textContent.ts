@@ -50,21 +50,7 @@ export function getReadout(element: HTMLElement): string {
 
 			elementContent = element.innerText;
 			break;
-		case 'li':
-			// if (elementContent === '') {
-			// 	const children = [...element.children] as HTMLElement[];
-			// 	children.forEach((el) => {
-			// 		const readout = getReadout(el);
 
-			// 		if (readout !== '') {
-			// 			console.log('child readout!!!', readout);
-
-			// 			return readout;
-			// 		}
-			// 	});
-			// }
-
-			return '';
 		case 'div':
 			if (element.innerHTML != '' && !element.innerHTML.includes('<')) {
 				// If the div contains just text (no child elements), treat it as a normal p element.

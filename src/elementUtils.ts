@@ -69,9 +69,25 @@ export function getElementStartingPoints(element: HTMLElement, dir: string) {
 	}
 }
 
-const acceptableEdgeDistance = 20;
-export function worthNavigatingTo(startingElement: HTMLElement, destinationElement: HTMLElement, dir: string): boolean {
-	if (startingElement === destinationElement || getReadout(destinationElement) === '' || elementsRelated(startingElement, destinationElement)) return false;
+export function worthNavigatingTo(startingElement: HTMLElement, destinationElement: HTMLElement, dir: string, alt = false): boolean | HTMLElement {
+	if (!startingElement || !destinationElement) return false;
+
+	if (startingElement === destinationElement || elementsRelated(startingElement, destinationElement)) return false;
+
+	// Searches children/parent for valid alternative if element is not suitable for reading. Can result in unintuitive navigation, but solves the problem of missing many elements at a time.
+	if (getReadout(destinationElement) === '') {
+		if (alt) {
+			if (destinationElement.parentElement) if (worthNavigatingTo(startingElement, destinationElement.parentElement, dir)) return destinationElement.parentElement as HTMLElement;
+
+			for (var i = 0; i < destinationElement.children.length; i++) {
+				const child = destinationElement.children[i];
+				if (worthNavigatingTo(startingElement, child as HTMLElement, dir)) {
+					console.log(getReadout(child as HTMLElement));
+					return child as HTMLElement;
+				}
+			}
+		} else return false;
+	}
 
 	const startElRect = startingElement.getBoundingClientRect();
 	const destElRect = destinationElement.getBoundingClientRect();
@@ -92,21 +108,6 @@ export function worthNavigatingTo(startingElement: HTMLElement, destinationEleme
 	}
 
 	return true;
-}
-
-function elementsFromPoints(points: { x: number; y: number }[]) {
-	const elements: HTMLElement[] = [];
-
-	points.forEach((point, i) => {
-		const elementAtPoint = document.elementFromPoint(point.x, point.y) as HTMLElement;
-
-		// console.log(`Point ${i}:`, points[i], '; element:', elementAtPoint);
-
-		if (elementAtPoint) elements.push(elementAtPoint);
-	});
-
-	// Remove duplicates
-	return elements.filter((el, i) => elements.indexOf(el) === i);
 }
 
 /** Gets element in a certain direction (up, down, left, right)
@@ -150,7 +151,7 @@ function elementsRelated(firstElement: HTMLElement, secondElement: HTMLElement) 
 	return firstElement.contains(secondElement) || secondElement.contains(firstElement);
 }
 
-const detailedDebugging = true; // Turn off for better performance
+const detailedLogging = true; // Turn off for better performance
 // Increase interval for lower precision, but higher performance
 function getElementInRegion(startingElement: HTMLElement, dir: string, minX: number, maxX: number, topY: number, bottomY: number, interval = 15): HTMLElement | undefined {
 	if (minX === -1) minX = 0;
@@ -158,7 +159,7 @@ function getElementInRegion(startingElement: HTMLElement, dir: string, minX: num
 	if (topY === -1) topY = 0;
 	if (bottomY === -1) bottomY = window.innerHeight;
 
-	if (detailedDebugging) console.log(`%cRegion bounds - x: ${minX}-${maxX}; y: ${topY}-${bottomY}`, 'color: skyblue');
+	if (detailedLogging) console.log(`%cRegion bounds - x: ${minX}-${maxX}; y: ${topY}-${bottomY}`, 'color: skyblue');
 
 	/*
 	 * Iterating y-value based on direction
@@ -170,65 +171,93 @@ function getElementInRegion(startingElement: HTMLElement, dir: string, minX: num
 
 	switch (dir) {
 		case 'left':
-			console.log(`%cWe be navigating left`, 'color: skyblue');
+			if (detailedLogging) console.log(`%cWe be navigating left`, 'color: skyblue');
 
 			for (let x = maxX; x >= minX; x -= interval) {
 				for (let y = topY; y <= bottomY; y += interval) {
-					const elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
+					let elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
 
-					// console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
+					if (detailedLogging) console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
 
-					if (elementAtPoint && worthNavigatingTo(startingElement, elementAtPoint, dir)) {
-						if (detailedDebugging) console.log('Element found: ', elementAtPoint);
-						return elementAtPoint;
+					let p;
+					if ((p = worthNavigatingTo(startingElement, elementAtPoint, dir, true))) {
+						if (typeof p !== 'boolean') {
+							elementAtPoint = p;
+						}
+
+						if (getReadout(elementAtPoint) !== '') {
+							if (detailedLogging) console.log('Element found: ', elementAtPoint);
+							return elementAtPoint;
+						}
 					}
 				}
 			}
 			break;
 		case 'right':
-			console.log(`%cWe be navigating right`, 'color: skyblue');
+			if (detailedLogging) console.log(`%cWe be navigating right`, 'color: skyblue');
 
 			for (let x = minX; x <= maxX; x += interval) {
 				for (let y = topY; y <= bottomY; y += interval) {
-					const elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
+					let elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
 
-					// console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
+					if (detailedLogging) console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
 
-					if (elementAtPoint && worthNavigatingTo(startingElement, elementAtPoint, dir)) {
-						if (detailedDebugging) console.log('Element found: ', elementAtPoint);
-						return elementAtPoint;
+					let p;
+					if ((p = worthNavigatingTo(startingElement, elementAtPoint, dir, true))) {
+						if (typeof p !== 'boolean') {
+							elementAtPoint = p;
+						}
+
+						if (getReadout(elementAtPoint) !== '') {
+							if (detailedLogging) console.log('Element found: ', elementAtPoint);
+							return elementAtPoint;
+						}
 					}
 				}
 			}
 			break;
 		case 'up':
-			console.log('%cWe be navigating up', 'color: skyblue');
+			if (detailedLogging) console.log('%cWe be navigating up', 'color: skyblue');
 
 			for (let y = bottomY; y >= topY; y -= interval) {
 				for (let x = minX; x <= maxX; x += interval) {
-					const elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
+					let elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
 
-					// console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
+					if (detailedLogging) console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
 
-					if (elementAtPoint && worthNavigatingTo(startingElement, elementAtPoint, dir)) {
-						if (detailedDebugging) console.log('Element found: ', elementAtPoint, elementAtPoint.getBoundingClientRect());
-						return elementAtPoint;
+					let p;
+					if ((p = worthNavigatingTo(startingElement, elementAtPoint, dir, true))) {
+						if (typeof p !== 'boolean') {
+							elementAtPoint = p;
+						}
+
+						if (getReadout(elementAtPoint) !== '') {
+							if (detailedLogging) console.log('Element found: ', elementAtPoint);
+							return elementAtPoint;
+						}
 					}
 				}
 			}
 			break;
 		case 'down':
-			console.log('%cWe be navigating down', 'color: skyblue');
+			if (detailedLogging) console.log('%cWe be navigating down', 'color: skyblue');
 
 			for (let y = topY; y <= bottomY; y += interval) {
 				for (let x = minX; x <= maxX; x += interval) {
-					const elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
+					let elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
 
-					console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
+					if (detailedLogging) console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
 
-					if (elementAtPoint && worthNavigatingTo(startingElement, elementAtPoint, dir)) {
-						if (detailedDebugging) console.log('Element found: ', elementAtPoint, elementAtPoint.getBoundingClientRect());
-						return elementAtPoint;
+					let p;
+					if ((p = worthNavigatingTo(startingElement, elementAtPoint, dir, true))) {
+						if (typeof p !== 'boolean') {
+							elementAtPoint = p;
+						}
+
+						if (getReadout(elementAtPoint) !== '') {
+							if (detailedLogging) console.log('Element found: ', elementAtPoint);
+							return elementAtPoint;
+						}
 					}
 				}
 			}

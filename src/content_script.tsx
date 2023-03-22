@@ -21,7 +21,7 @@ initializeNavigationListeners();
 
 // Detects which element is currently being focused on and gives it a border
 let lastScrollYPos = window.scrollY;
-let lastBorder = '';
+let styledElements: HTMLElement[] = [];
 document.addEventListener(
 	'focusin',
 	async () => {
@@ -36,8 +36,10 @@ document.addEventListener(
 
 		if (!mute) playSound(getBias(activeElement), getReadout(activeElement));
 
-		lastBorder = activeElement.style.border ?? '';
-		activeElement.style.border = '2px solid #00d0ff';
+		styledElements.push(activeElement);
+
+		activeElement.style.outline = '2px #00d0ff dashed';
+		activeElement.style.outlineOffset = '-1px';
 
 		lastScrollYPos = window.scrollY;
 	},
@@ -46,9 +48,15 @@ document.addEventListener(
 
 document.addEventListener(
 	'focusout',
-	(e) => {
-		const unfocusedElement = e.target as HTMLElement;
-		unfocusedElement.style.border = lastBorder; // Preserves existing border if it had any
+	() => {
+		styledElements.forEach((el) => {
+			if (el != document.activeElement) {
+				el.style.outline = '';
+				el.removeAttribute('outlineOffset');
+			}
+		});
+
+		styledElements.splice(0, styledElements.length);
 	},
 	true
 );

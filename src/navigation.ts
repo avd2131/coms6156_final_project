@@ -37,9 +37,9 @@ async function navigate(key: string, fromKeypress: boolean) {
 
 				if (verticalScrollStatus !== 'top' && verticalScrollStatus !== 'noscroll') {
 					// Scroll up and try looking for elements again
-					window.scrollBy(0, -50);
+					window.scrollBy(0, -300);
 
-					await sleep(20);
+					await sleep(5);
 
 					navigate('w', false);
 				} else attemptingNavigation = false;
@@ -71,9 +71,11 @@ async function navigate(key: string, fromKeypress: boolean) {
 				// No element found
 				if (verticalScrollStatus !== 'bottom' && verticalScrollStatus !== 'noscroll') {
 					// Scroll down and try looking for elements again
-					window.scrollBy(0, 50);
+					window.scrollBy(0, 300);
 
-					await sleep(20);
+					console.log('scrolling down...');
+
+					await sleep(5);
 
 					navigate('s', false);
 				} else attemptingNavigation = false;
