@@ -54,9 +54,9 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
 		// Special behavior to play scroll sound
 		// Royalty free beep: https://samplefocus.com/samples/short-beep
 		playBeep = true;
-	}
 
-	// console.log('play beep:', playBeep, beepFile);
+		console.log('attempting to play beep...');
+	}
 
 	if (!audioCtx) {
 		audioCtx = new AudioContext();
@@ -75,15 +75,9 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
 		//Prevent multiple sounds from playing at the same time
 		await stopAllSounds();
 
-		//Gets audio file from imported path
-		//const audioFile = await getFile(audioFilePath, 'dirAudio');
-
 		let source = audioCtx!.createBufferSource();
 		lastSoundSource = { sourceNode: source, id: id };
 		sources.push(source);
-
-		// Original Solution (pre-recorded mp3 files)
-		// source.buffer = await audioCtx.decodeAudioData(await audioFile.arrayBuffer());
 
 		// Using MeSpeak
 		if (!playBeep) source.buffer = await audioCtx!.decodeAudioData(meSpeak.speak(text, { rawdata: true }));
@@ -93,15 +87,14 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
 		}
 
 		source.onended = () => {
+			console.log('sound ended.');
+
 			lastSoundSource = undefined;
 			resolve();
 		};
 
 		//Modifies pitch based on provided y-value
-		if (spatialAudioEnabled) {
-			//console.log(bias.x, bias.y);
-			setPannerPosition(bias.x, bias.y);
-		}
+		if (spatialAudioEnabled) setPannerPosition(bias.x, bias.y);
 
 		source.detune.value = pitchConst * panner!.positionY.value;
 
@@ -116,6 +109,8 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
 		}
 
 		source.start(0);
+
+		console.log('sound started.');
 	});
 }
 

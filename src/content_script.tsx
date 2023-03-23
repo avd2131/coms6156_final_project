@@ -22,26 +22,33 @@ initializeNavigationListeners();
 // Detects which element is currently being focused on and gives it a border
 let lastScrollYPos = window.scrollY;
 let styledElements: HTMLElement[] = [];
+let firstFocus = true;
 document.addEventListener(
 	'focusin',
 	async () => {
 		const { scrollFeedback, spatializeFeedback, mute } = await getScrollSoundSettings();
 
-		if (window.scrollY != lastScrollYPos) {
-			if (scrollFeedback && !mute) await playSound(spatializeFeedback ? { x: getBias(lastFocusedElement!).x, y: -1 } : { x: 0, y: 0 }, '_scroll-indicator_');
-		}
+		firstFocus = false;
 
 		const activeElement = document.activeElement as HTMLElement;
 		setLastFocusedElement(activeElement);
 
-		if (!mute) playSound(getBias(activeElement), getReadout(activeElement));
+		console.log('Element focused:', activeElement);
 
 		styledElements.push(activeElement);
 
 		activeElement.style.outline = '2px #00d0ff dashed';
 		activeElement.style.outlineOffset = '-1px';
 
-		lastScrollYPos = window.scrollY;
+		if (window.scrollY != lastScrollYPos && !firstFocus) {
+			lastScrollYPos = window.scrollY;
+
+			console.log('new element, yo');
+
+			if (scrollFeedback && !mute) await playSound(spatializeFeedback ? { x: getBias(lastFocusedElement!).x, y: -1 } : { x: 0, y: 0 }, '_scroll-indicator_');
+		}
+
+		if (!mute) playSound(getBias(activeElement), getReadout(activeElement));
 	},
 	true
 );

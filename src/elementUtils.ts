@@ -119,7 +119,6 @@ export function getElementInDirection(startingElement: HTMLElement | undefined, 
 	if (!startingElement) return undefined;
 
 	nextEl = startingElement;
-	let validElements: HTMLElement[] = [];
 
 	const rect = startingElement.getBoundingClientRect();
 
@@ -140,7 +139,7 @@ export function getElementInDirection(startingElement: HTMLElement | undefined, 
 			break;
 	}
 
-	console.log('Valid elements:', validElements, 'Chosen element:', nextEl);
+	console.log(`Chosen element in ${dir} direction:`, nextEl);
 
 	nextEl?.setAttribute('tabindex', '-1');
 	return nextEl;

@@ -65,6 +65,8 @@ async function navigate(key: string, fromKeypress: boolean) {
 			nextEl = getElementInDirection(lastFocusedElement, 'down');
 
 			if (nextEl) {
+				console.log('focusing on element:', nextEl);
+
 				// Element found
 				nextEl.focus();
 
