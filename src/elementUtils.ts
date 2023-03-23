@@ -151,7 +151,7 @@ function elementsRelated(firstElement: HTMLElement, secondElement: HTMLElement) 
 	return firstElement.contains(secondElement) || secondElement.contains(firstElement);
 }
 
-const detailedLogging = true; // Turn off for better performance
+const detailedLogging = false; // Turn off for better performance
 // Increase interval for lower precision, but higher performance
 function getElementInRegion(startingElement: HTMLElement, dir: string, minX: number, maxX: number, topY: number, bottomY: number, interval = 15): HTMLElement | undefined {
 	if (minX === -1) minX = 0;

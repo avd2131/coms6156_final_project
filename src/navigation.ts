@@ -14,12 +14,14 @@ export function initializeNavigationListeners() {
 }
 
 let attemptingNavigation = false;
+let keyPressDuringNavigation = false;
 async function navigate(key: string, fromKeypress: boolean) {
 	let nextEl: HTMLElement | undefined;
 
 	if (!lastFocusedElement) return;
 
-	if (attemptingNavigation && fromKeypress) return;
+	if (!attemptingNavigation) keyPressDuringNavigation = false;
+	if (attemptingNavigation && fromKeypress) keyPressDuringNavigation = true;
 
 	switch (key.toLowerCase()) {
 		case 'w': // Move up
@@ -35,7 +37,7 @@ async function navigate(key: string, fromKeypress: boolean) {
 			} else {
 				// No element found
 
-				if (verticalScrollStatus !== 'top' && verticalScrollStatus !== 'noscroll') {
+				if (verticalScrollStatus !== 'top' && verticalScrollStatus !== 'noscroll' && !keyPressDuringNavigation) {
 					// Scroll up and try looking for elements again
 					window.scrollBy(0, -300);
 
@@ -69,7 +71,7 @@ async function navigate(key: string, fromKeypress: boolean) {
 				attemptingNavigation = false;
 			} else {
 				// No element found
-				if (verticalScrollStatus !== 'bottom' && verticalScrollStatus !== 'noscroll') {
+				if (verticalScrollStatus !== 'bottom' && verticalScrollStatus !== 'noscroll' && !keyPressDuringNavigation) {
 					// Scroll down and try looking for elements again
 					window.scrollBy(0, 300);
 
