@@ -6,6 +6,7 @@ const Popup = () => {
 	const [spatialAudio, setSpatialAudio] = useState<boolean>(false);
 	const [spatializeFeedback, setSpatializeFeedback] = useState<boolean>(false);
 	const [mute, setMute] = useState<boolean>(false);
+	const [elementsOutlined, setElementsOutlined] = useState<boolean>(false);
 
 	useEffect(() => {
 		chrome.storage.sync.get(
@@ -87,6 +88,19 @@ const Popup = () => {
 				</div>
 				<br></br>
 				<button onClick={() => saveOptions()}>Save</button>
+				<br></br>
+				<br></br>
+				<button
+					onClick={() => {
+						setElementsOutlined(!elementsOutlined);
+
+						chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+							if (tabs[0].id) chrome.tabs.sendMessage(tabs[0].id, { type: 'popupEvent', data: elementsOutlined ? 'clear-outlines' : 'outline-elements' });
+						});
+					}}
+				>
+					Toggle element outlines
+				</button>
 			</div>
 		</>
 	);

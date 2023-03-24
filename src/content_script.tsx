@@ -73,3 +73,44 @@ function getScrollSoundSettings(): Promise<{ scrollFeedback: boolean; spatialize
 		});
 	});
 }
+
+let allElementsHighlighted = false;
+function highlightChildren(element: HTMLElement, clear: boolean) {
+	if (clear) {
+		element.style.outline = '';
+		element.removeAttribute('outlineOffset');
+	} else {
+		element.style.outline = '2px #00d0ff dashed';
+		element.style.outlineOffset = '-1px';
+	}
+
+	for (let i = 0; i < element.children.length; i++) {
+		const child = element.children[i] as HTMLElement;
+		highlightChildren(child, clear);
+	}
+}
+
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+	console.log('We got a message', message);
+
+	if (message.type === 'popupEvent') {
+		switch (message.data) {
+			case 'outline-elements':
+				if (!allElementsHighlighted) {
+					highlightChildren(document.documentElement, false);
+					allElementsHighlighted = true;
+				}
+				break;
+			case 'clear-outlines':
+				if (allElementsHighlighted) {
+					highlightChildren(document.documentElement, true);
+					allElementsHighlighted = false;
+				}
+				break;
+
+			default:
+				console.warn('Unknown message received:', message);
+				break;
+		}
+	}
+});
