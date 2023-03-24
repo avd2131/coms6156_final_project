@@ -1,3 +1,5 @@
+import { hasNonTextChildren } from './elementUtils';
+
 const logElementDetails = false;
 
 /**
@@ -52,18 +54,23 @@ export function getReadout(element: HTMLElement): string {
 			break;
 
 		case 'div':
-			if (element.innerHTML.trim() != '' && !element.innerHTML.includes('<')) {
+			if (element.innerHTML.trim() != '' && !hasNonTextChildren(element)) {
 				// If the div contains just text (no child elements), treat it as a normal p element.
 				elementName = 'group';
 
 				elementFirst = false;
 
-				elementContent = element.textContent;
+				elementContent = element.innerText;
 			} else return '';
 			break;
 		case 'span':
-			if (element.innerText === '') return '';
+		case 'strong':
+		case 'b':
 		case 'p':
+			if (element.innerText === '') return '';
+
+			if (element.parentElement?.childElementCount === 1 && element.parentElement?.innerText.length > element.innerText.length) return getReadout(element.parentElement);
+
 			elementName = 'text';
 
 			elementContent = element.innerText;
@@ -114,3 +121,30 @@ export function getReadout(element: HTMLElement): string {
 	if (elementFirst) return elementName + '; ' + elementContent;
 	else return elementContent + '; ' + elementName;
 }
+
+/** Takes the inner HTML of an element and tells whether or not it's readable text. */
+// const validTextContainers = ['p', 'b', 'strong', 'span'];
+// function validText(innerHTML: string): boolean {
+// 	if (innerHTML.includes('<')) {
+// 		// Contains child elements
+// 		let remainingInnerHTML = innerHTML;
+// 		let bracketPos = innerHTML.indexOf('<');
+
+// 		while (remainingInnerHTML.length > 0) {
+// 			remainingInnerHTML.slice(bracketPos); // Includes '<'
+
+// 			// sample:
+// 			// <b>yo</b>
+// 			// sup
+// 			//
+// 			// sample:
+// 			// <strong>hi</strong>
+// 			// hey
+// 			// <strong>hello</strong>
+// 		}
+// 	}
+
+// 	if (innerHTML.trim() === '') return false;
+
+// 	return true;
+// }

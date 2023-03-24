@@ -103,8 +103,6 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
 		const gainNode = audioCtx!.createGain();
 		gainNode.gain.value = 10 + 2 * Math.abs(bias.x); // Gain increases as distance from center increases to help balance out volume levels
 
-		console.log('Gain value:', gainNode.gain.value);
-
 		source.connect(gainNode).connect(panner!).connect(audioCtx!.destination);
 
 		source.start(0);

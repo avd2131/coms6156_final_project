@@ -265,3 +265,14 @@ function getElementInRegion(startingElement: HTMLElement, dir: string, minX: num
 
 	return undefined;
 }
+
+const textTypes = ['p', 'b', 'span', 'strong', 'em', 'q', 's', 'sub', 'sup', 'u'];
+export function hasNonTextChildren(element: HTMLElement): boolean {
+	for (let i = 0; i < element.children.length; i++) {
+		const childElementType = element.children[i].tagName.toLowerCase();
+
+		if (!textTypes.includes(childElementType)) return true;
+	}
+
+	return false;
+}
