@@ -52,7 +52,7 @@ export function getReadout(element: HTMLElement): string {
 			break;
 
 		case 'div':
-			if (element.innerHTML != '' && !element.innerHTML.includes('<')) {
+			if (element.innerHTML.trim() != '' && !element.innerHTML.includes('<')) {
 				// If the div contains just text (no child elements), treat it as a normal p element.
 				elementName = 'group';
 
@@ -68,13 +68,24 @@ export function getReadout(element: HTMLElement): string {
 
 			elementContent = element.innerText;
 			break;
-		case 'path':
-			if (element.parentElement?.tagName.toLowerCase() === 'path') return getReadout(element.parentElement);
 		case 'svg':
 		case 'img':
 			elementFirst = false;
 
 			elementName = 'image';
+
+			/* Check if:
+			 *	 1. Lone sibling
+			 *   2. Parent is link
+			 *
+			 *   If so, call this method on the parent (link) instead.
+			 */
+
+			if (element.parentElement?.childElementCount === 1) {
+				const parentTagName = element.parentElement?.tagName.toLowerCase();
+				if (parentTagName === 'a' || parentTagName === 'button') return getReadout(element.parentElement);
+			}
+
 			if (!labelledByOtherElement) elementContent = element.getAttribute('alt') ?? '';
 			break;
 		case 'input':
