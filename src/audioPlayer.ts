@@ -19,11 +19,6 @@ getArrayBuffer(beepFileURL).then((buffer) => {
 
 let pitchConst = 350;
 
-const params: any = new Proxy(new URLSearchParams(window.location.search), {
-	get: (searchParams: URLSearchParams, prop: string) => searchParams.get(prop)
-});
-const spatialAudioEnabled: boolean = params.spatialAudio !== 'false';
-
 /** Sets the position of the PannerNode. */
 export function setPannerPosition(x: number = 0, y: number = 0, z: number = 5): void {
 	if (!panner) {
@@ -44,10 +39,16 @@ let soundPromiseRejectMethods: Map<number, Function> = new Map();
 let soundsPlayed = 0;
 let sources: AudioBufferSourceNode[] = [];
 
-/** Plays a sound file in a spatialized manner given the file path of the audio file. (e.g. 'h1.mp3') */
+let spatialAudioEnabled = true;
+chrome.storage.sync.get(['spatialAudio'], (items) => {
+	spatialAudioEnabled = items.spatialAudio ?? true;
+});
+
 export async function playSound(bias: { x: number; y: number }, text: string): Promise<void> {
 	// Don't waste any resources with empty strings.
 	if (text === '') return;
+
+	if (!spatialAudioEnabled) bias = { x: 0, y: 0 };
 
 	let playBeep = false;
 	if (text === '_scroll-indicator_') {
@@ -72,7 +73,7 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
 
 		soundPromiseRejectMethods.set(id, reject);
 
-		//Prevent multiple sounds from playing at the same time
+		// Prevent multiple sounds from playing at the same time
 		await stopAllSounds();
 
 		let source = audioCtx!.createBufferSource();
@@ -80,37 +81,33 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
 		sources.push(source);
 
 		// Using MeSpeak
-		if (!playBeep) source.buffer = await audioCtx!.decodeAudioData(meSpeak.speak(text, { rawdata: true }));
-		else {
+		if (!playBeep) {
+			const audioData = meSpeak.speak(text, { rawdata: true });
+			source.buffer = await audioCtx!.decodeAudioData(audioData);
+		} else {
 			if (!beepArrayBuffer) console.error('There was an error in loading the beep sound file.');
 			else source.buffer = beepAudioBuffer;
 		}
 
 		source.onended = () => {
-			console.log('sound ended.');
-
 			lastSoundSource = undefined;
 			resolve();
 		};
 
-		//Modifies pitch based on provided y-value
-		if (spatialAudioEnabled) setPannerPosition(bias.x, bias.y);
+		// Modifies pitch based on provided y-value
+		setPannerPosition(bias.x, bias.y);
 
 		source.detune.value = pitchConst * panner!.positionY.value;
 
-		if (bias.x === 0 || !spatialAudioEnabled) {
-			source.connect(audioCtx!.destination);
-		} else {
-			var gainNode = audioCtx!.createGain();
+		// Balancing volume levels
+		const gainNode = audioCtx!.createGain();
+		gainNode.gain.value = 10 + 2 * Math.abs(bias.x); // Gain increases as distance from center increases to help balance out volume levels
 
-			gainNode.gain.value = 20 + Math.abs(bias.x); //Gain increases as distance from center increases to help balance out volume levels
+		console.log('Gain value:', gainNode.gain.value);
 
-			source.connect(gainNode).connect(panner!).connect(audioCtx!.destination);
-		}
+		source.connect(gainNode).connect(panner!).connect(audioCtx!.destination);
 
 		source.start(0);
-
-		console.log('sound started.');
 	});
 }
 

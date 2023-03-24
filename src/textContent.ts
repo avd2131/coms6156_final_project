@@ -62,7 +62,6 @@ export function getReadout(element: HTMLElement): string {
 			} else return '';
 			break;
 		case 'span':
-		case 'strong':
 			if (element.innerText === '') return '';
 		case 'p':
 			elementName = 'text';

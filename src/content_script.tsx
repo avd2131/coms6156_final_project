@@ -33,8 +33,6 @@ document.addEventListener(
 		const activeElement = document.activeElement as HTMLElement;
 		setLastFocusedElement(activeElement);
 
-		console.log('Element focused:', activeElement);
-
 		styledElements.push(activeElement);
 
 		activeElement.style.outline = '2px #00d0ff dashed';
@@ -42,8 +40,6 @@ document.addEventListener(
 
 		if (window.scrollY != lastScrollYPos && !firstFocus) {
 			lastScrollYPos = window.scrollY;
-
-			console.log('new element, yo');
 
 			if (scrollFeedback && !mute) await playSound(spatializeFeedback ? { x: getBias(lastFocusedElement!).x, y: -1 } : { x: 0, y: 0 }, '_scroll-indicator_');
 		}
@@ -71,6 +67,8 @@ document.addEventListener(
 function getScrollSoundSettings(): Promise<{ scrollFeedback: boolean; spatializeFeedback: boolean; mute: boolean }> {
 	return new Promise((resolve) => {
 		chrome.storage.sync.get(['scrollFeedback', 'spatializeFeedback', 'mute'], (items) => {
+			console.log(items);
+
 			resolve((items as { scrollFeedback: boolean; spatializeFeedback: boolean; mute: boolean }) ?? { scrollFeedback: false, spatializeFeedback: false, mute: false });
 		});
 	});

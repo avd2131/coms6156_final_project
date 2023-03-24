@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 
 const Popup = () => {
 	const [scrollFeedback, setScrollFeedback] = useState<boolean>(false);
+	const [spatialAudio, setSpatialAudio] = useState<boolean>(false);
 	const [spatializeFeedback, setSpatializeFeedback] = useState<boolean>(false);
 	const [mute, setMute] = useState<boolean>(false);
 
@@ -10,11 +11,13 @@ const Popup = () => {
 		chrome.storage.sync.get(
 			{
 				scrollFeedback: scrollFeedback,
+				spatialAudio: spatialAudio,
 				spatializeFeedback: spatializeFeedback,
 				mute: mute
 			},
 			(items) => {
 				setScrollFeedback(items.scrollFeedback);
+				setSpatialAudio(items.spatialAudio);
 				setSpatializeFeedback(items.spatializeFeedback);
 				setMute(items.mute);
 			}
@@ -26,6 +29,7 @@ const Popup = () => {
 		chrome.storage.sync.set(
 			{
 				scrollFeedback: scrollFeedback,
+				spatialAudio: spatialAudio,
 				spatializeFeedback: spatializeFeedback,
 				mute: mute
 			},
@@ -50,6 +54,16 @@ const Popup = () => {
 						}}
 					/>
 					<p>Mute</p>
+				</div>
+				<div id='spatialAudioCheckboxWrapper' className='checkbox-wrapper'>
+					<input
+						type='checkbox'
+						checked={spatialAudio}
+						onChange={() => {
+							setSpatialAudio(!spatialAudio);
+						}}
+					/>
+					<p>Spatialize Audio</p>
 				</div>
 				<div id='scrollFeedbackCheckboxWrapper' className='checkbox-wrapper'>
 					<input
