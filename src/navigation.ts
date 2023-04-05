@@ -13,7 +13,7 @@ export function initializeNavigationListeners() {
 	});
 }
 
-const scrollPauseInterval = 5;
+const scrollPauseInterval = 50;
 
 let attemptingNavigation = false;
 let keyPressDuringNavigation = false;

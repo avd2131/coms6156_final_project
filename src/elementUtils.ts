@@ -97,18 +97,24 @@ export function worthNavigatingTo(startingElement: HTMLElement, destinationEleme
 	const destElRect = destinationElement.getBoundingClientRect();
 
 	const startingElementScrollView = getFirstScrollView(startingElement);
+	const destinationElementScrollView = getFirstScrollView(destinationElement);
+
+	const startElFixed = getFixedParent(startingElement) ? true : false;
+	const destElFixed = getFixedParent(destinationElement) ? true : false;
 
 	switch (dir) {
 		case 'up':
 			if (startElRect.top <= destElRect.top) return false; // If the top border of the destination element is lower/equal to than the current element's top border, don't mark this the destination element as worth navigating to. Same logic extends to the other three cases.
 
-			if (startingElementScrollView) {
+			if (startingElementScrollView && !startElFixed) {
 				if (
 					scrolledToTop(startingElementScrollView) ||
-					(startingElementScrollView.contains(destinationElement) && !getFixedParent(destinationElement)) ||
+					(startingElementScrollView.contains(destinationElement) && !destElFixed) ||
 					(startingElementScrollView.contains(startingElement) && startingElementScrollView.contains(destinationElement) && startingElementScrollView !== document.documentElement)
 				) {
 					console.log('STARTING ELEMENT SCROLL VIEW:', startingElementScrollView, destinationElement, startingElementScrollView.contains(destinationElement));
+					// Good
+				} else if (destinationElementScrollView && startingElementScrollView !== destinationElementScrollView) {
 					// Good
 				} else {
 					console.log('returning element', destinationElement, 'as undefined.', inScrollView(startingElement), scrolledToBottom);
@@ -119,10 +125,7 @@ export function worthNavigatingTo(startingElement: HTMLElement, destinationEleme
 		case 'down':
 			if (startElRect.bottom >= destElRect.bottom) return false;
 
-			console.log('HERE:', destinationElement, startingElementScrollView);
-			if (destinationElement && startingElementScrollView) {
-				console.log('HERE #2:', scrolledToBottom(startingElementScrollView), startingElementScrollView.contains(destinationElement), getFixedParent(destinationElement));
-
+			if (startingElementScrollView && !startElFixed) {
 				if (
 					scrolledToBottom(startingElementScrollView) ||
 					(startingElementScrollView.contains(destinationElement) && !getFixedParent(destinationElement)) ||
@@ -130,6 +133,8 @@ export function worthNavigatingTo(startingElement: HTMLElement, destinationEleme
 				) {
 					// Good
 					console.log('NAVIGATING HERE', destinationElement);
+				} else if (destinationElementScrollView && startingElementScrollView !== destinationElementScrollView) {
+					// Good
 				} else {
 					console.log('returning element', destinationElement, 'as undefined.', inScrollView(startingElement), scrolledToBottom);
 					return false;
