@@ -1,4 +1,4 @@
-import { getElementInDirection } from './elementUtils';
+import { getElementInDirection, getFirstScrollView, scrolledToBottom, scrolledToTop } from './elementUtils';
 import { verticalScrollStatus } from './scroll';
 
 export let lastFocusedElement: HTMLElement | undefined;
@@ -12,6 +12,8 @@ export function initializeNavigationListeners() {
 		navigate(e.key, true);
 	});
 }
+
+const scrollPauseInterval = 5;
 
 let attemptingNavigation = false;
 let keyPressDuringNavigation = false;
@@ -36,12 +38,23 @@ async function navigate(key: string, fromKeypress: boolean) {
 				attemptingNavigation = false;
 			} else {
 				// No element found
+				const scrollView = getFirstScrollView(lastFocusedElement);
 
-				if (verticalScrollStatus !== 'top' && verticalScrollStatus !== 'noscroll' && !keyPressDuringNavigation) {
+				if (scrollView && !scrolledToTop(scrollView) && !keyPressDuringNavigation) {
+					console.log('scrolling up...');
+
+					await sleep(scrollPauseInterval);
+
+					scrollView.scrollBy(0, -300);
+
+					navigate('w', false);
+				} else if (verticalScrollStatus !== 'top' && verticalScrollStatus !== 'noscroll' && !keyPressDuringNavigation) {
 					// Scroll up and try looking for elements again
-					window.scrollBy(0, -300);
+					console.log('scrolling up...');
 
-					await sleep(5);
+					await sleep(scrollPauseInterval);
+
+					window.scrollBy(0, -300);
 
 					navigate('w', false);
 				} else attemptingNavigation = false;
@@ -73,13 +86,22 @@ async function navigate(key: string, fromKeypress: boolean) {
 				attemptingNavigation = false;
 			} else {
 				// No element found
-				if (verticalScrollStatus !== 'bottom' && verticalScrollStatus !== 'noscroll' && !keyPressDuringNavigation) {
+				const scrollView = getFirstScrollView(lastFocusedElement);
+				if (scrollView && !scrolledToBottom(scrollView) && !keyPressDuringNavigation) {
+					console.trace('scrolling down...');
+
+					await sleep(scrollPauseInterval);
+
+					scrollView.scrollBy(0, 300);
+
+					navigate('s', false);
+				} else if (verticalScrollStatus !== 'bottom' && verticalScrollStatus !== 'noscroll' && !keyPressDuringNavigation) {
 					// Scroll down and try looking for elements again
+					console.trace('scrolling down...');
+
+					await sleep(scrollPauseInterval);
+
 					window.scrollBy(0, 300);
-
-					console.log('scrolling down...');
-
-					await sleep(5);
 
 					navigate('s', false);
 				} else attemptingNavigation = false;

@@ -74,6 +74,10 @@ export function worthNavigatingTo(startingElement: HTMLElement, destinationEleme
 
 	if (startingElement === destinationElement || elementsRelated(startingElement, destinationElement)) return false;
 
+	const destinationComputedStyle = getComputedStyle(destinationElement);
+
+	if (destinationComputedStyle.display === 'none') return false;
+
 	// Searches children/parent for valid alternative if element is not suitable for reading. Can result in unintuitive navigation, but solves the problem of missing many elements at a time.
 	if (getReadout(destinationElement) === '') {
 		if (alt) {
@@ -92,12 +96,36 @@ export function worthNavigatingTo(startingElement: HTMLElement, destinationEleme
 	const startElRect = startingElement.getBoundingClientRect();
 	const destElRect = destinationElement.getBoundingClientRect();
 
+	const startingElementScrollView = getFirstScrollView(startingElement);
+
 	switch (dir) {
 		case 'up':
 			if (startElRect.top <= destElRect.top) return false; // If the top border of the destination element is lower/equal to than the current element's top border, don't mark this the destination element as worth navigating to. Same logic extends to the other three cases.
+
+			if (startingElementScrollView) {
+				if (inScrollView(startingElement)) {
+					if (scrolledToTop(startingElementScrollView) || (startingElementScrollView.contains(destinationElement) && !getFixedParent(destinationElement))) {
+						// Good
+					} else {
+						console.log('returning element', destinationElement, 'as undefined.', inScrollView(startingElement), scrolledToBottom);
+						return false;
+					}
+				}
+			}
 			break;
 		case 'down':
 			if (startElRect.bottom >= destElRect.bottom) return false;
+
+			if (destinationElement && startingElementScrollView) {
+				if (inScrollView(startingElement)) {
+					if (scrolledToBottom(startingElementScrollView) || (startingElementScrollView.contains(destinationElement) && !getFixedParent(destinationElement))) {
+						// Good
+					} else {
+						console.log('returning element', destinationElement, 'as undefined.', inScrollView(startingElement), scrolledToBottom);
+						return false;
+					}
+				}
+			}
 			break;
 		case 'left':
 			if (startElRect.left <= destElRect.left) return false;
@@ -121,6 +149,7 @@ export function getElementInDirection(startingElement: HTMLElement | undefined, 
 	nextEl = startingElement;
 
 	const rect = startingElement.getBoundingClientRect();
+	const startingElementScrollView = getFirstScrollView(startingElement);
 
 	switch (dir) {
 		case 'left':
@@ -129,15 +158,16 @@ export function getElementInDirection(startingElement: HTMLElement | undefined, 
 		case 'up':
 			// y-coordinate is reversed in web
 			nextEl = getElementInRegion(startingElement, dir, rect.left, rect.right, -1, rect.top);
+
+			console.log('TRYNA GO UP', nextEl, startingElementScrollView);
 			break;
 		case 'right':
 			nextEl = getElementInRegion(startingElement, dir, rect.right, -1, rect.top, rect.bottom);
+
 			break;
 		case 'down':
 			// y-coordinate is reversed in web
 			nextEl = getElementInRegion(startingElement, dir, rect.left, rect.right, rect.bottom, -1);
-
-			// if (nextEl && getTopBar(nextEl)) return undefined;
 			break;
 	}
 
@@ -159,6 +189,8 @@ function getElementInRegion(startingElement: HTMLElement, dir: string, minX: num
 	if (maxX === -1) maxX = window.innerWidth;
 	if (topY === -1) topY = 0;
 	if (bottomY === -1) bottomY = window.innerHeight;
+
+	if (topY < 0) topY = 0;
 
 	if (detailedLogging) console.log(`%cRegion bounds - x: ${minX}-${maxX}; y: ${topY}-${bottomY}`, 'color: skyblue');
 
@@ -280,20 +312,51 @@ export function hasNonTextChildren(element: HTMLElement): boolean {
 }
 
 /// Returns the 'top bar' that is the parent of the given element. Only does this if the given element is a child of the top bar (or the top bar container itself)
-export function getTopBar(element: HTMLElement): HTMLElement | undefined {
-	console.log('Top bar testing; ORIGINAL ELEMENT:', element);
-
-	while (element.parentElement && element.parentElement !== document.documentElement) {
-		console.log('Testing element: ', element, element.style);
-
+export function getFixedParent(element: HTMLElement): HTMLElement | undefined {
+	while (element.parentElement) {
 		const computedStyle = getComputedStyle(element);
 
-		if (computedStyle.position === 'sticky' || computedStyle.position === 'fixed') {
-			console.log(element, 'sticky as hell');
-			return element;
-		}
+		if (computedStyle.position === 'sticky' || computedStyle.position === 'fixed') return element;
 
 		element = element.parentElement;
+	}
+
+	return undefined;
+}
+
+export function inScrollView(element: HTMLElement): boolean {
+	let currentElement: HTMLElement | undefined = element;
+
+	if (getFixedParent(currentElement)) return false;
+
+	return getFirstScrollView(currentElement) ? true : false;
+}
+
+export function scrolledToTop(scrollView: HTMLElement): boolean {
+	return scrollView.scrollTop === 0;
+}
+
+export function scrolledToBottom(scrollView: HTMLElement): boolean {
+	return scrollView.scrollTop === scrollView.scrollHeight - scrollView.clientHeight;
+}
+
+export function getFirstScrollView(element: HTMLElement): HTMLElement | undefined {
+	let currentElement: HTMLElement | undefined = element;
+
+	while (currentElement) {
+		if (currentElement.scrollHeight > currentElement.clientHeight) {
+			// Janky test to tell if an element is a valid scroll view or not. If we set the scroll position to 1 and it stays locked at 0, then in reality, it can't scroll.
+			if (currentElement.scrollTop === 0) {
+				currentElement.scrollTop = 1;
+
+				if (currentElement.scrollTop > 0) {
+					currentElement.scrollTop = 0;
+					return currentElement;
+				}
+			} else return currentElement;
+		}
+
+		currentElement = currentElement.parentElement ?? undefined;
 	}
 
 	return undefined;

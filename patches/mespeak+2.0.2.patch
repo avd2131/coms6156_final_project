@@ -1,0 +1,26 @@
+diff --git a/node_modules/mespeak/src/index.js b/node_modules/mespeak/src/index.js
+index 6894a56..8b9f21c 100644
+--- a/node_modules/mespeak/src/index.js
++++ b/node_modules/mespeak/src/index.js
+@@ -46,10 +46,11 @@ function fsCreateDataFile(path, fname, data, doNotRegister) {
+ // work around a emscripten FS-bug causing the engine to stop at some iteration (80th call)
+ // simply create a new instance and reload any files
+ function recoverFromFSError(message) {
+-	console.log('meSpeak -- recovering from error:', message);
++	message && console.log('meSpeak -- recovering from error:', message);
+ 	// save any loaded files from broken instance
+ 	var files = [],
+ 		f, i, l = fileRegistry.length;
++
+ 	for (i = 0; i < l; i++) {
+ 		f = fileRegistry[i];
+ 		files.push(eSpeak.FS.findObject(f.path + '/' + f.fname).contents);
+@@ -245,6 +246,8 @@ function speak(text, args, callback, _id) {
+ 	// returns:
+ 	// with option "rawdata": stream-object in specified format (or null on failure)
+ 	// default: returns numeric 32bit id (or 0 on failure)
++	recoverFromFSError()
++
+ 	if (typeof args !== 'object') args = {};
+ 	if (!canPlay && !args.rawdata) {
+ 		console.warn('meSpeak: Can\'t play; No audio support.');
