@@ -5,7 +5,7 @@ const logElementDetails = false;
 /**
  * Returns the text the voiceover should read out
  */
-export function getReadout(element: HTMLElement): string {
+export function getReadout(element: HTMLElement, fromParentWithEmptyReadout = false): string {
 	if (!element) return '';
 
 	// Should the TTS read out the element name first or the element contents first?
@@ -37,7 +37,7 @@ export function getReadout(element: HTMLElement): string {
 			// If the link has no text content and no label, search for that in its children
 			if (elementContent === '' && !element.getAttribute('aria-label')) {
 				const firstChildWithInfo = element.querySelector('[alt], [aria], [aria-labelledby]') as HTMLElement;
-				if (firstChildWithInfo) return getReadout(firstChildWithInfo as HTMLElement);
+				if (firstChildWithInfo) return getReadout(firstChildWithInfo as HTMLElement, true);
 			}
 			break;
 		case 'h1':
@@ -89,8 +89,10 @@ export function getReadout(element: HTMLElement): string {
 			 */
 
 			if (element.parentElement?.childElementCount === 1) {
+				console.log(element);
+
 				const parentTagName = element.parentElement?.tagName.toLowerCase();
-				if (parentTagName === 'a' || parentTagName === 'button') return getReadout(element.parentElement);
+				if ((parentTagName === 'a' || parentTagName === 'button') && !fromParentWithEmptyReadout) return getReadout(element.parentElement);
 			}
 
 			if (!labelledByOtherElement) elementContent = element.getAttribute('alt') ?? '';

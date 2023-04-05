@@ -136,10 +136,12 @@ export function getElementInDirection(startingElement: HTMLElement | undefined, 
 		case 'down':
 			// y-coordinate is reversed in web
 			nextEl = getElementInRegion(startingElement, dir, rect.left, rect.right, rect.bottom, -1);
+
+			// if (nextEl && getTopBar(nextEl)) return undefined;
 			break;
 	}
 
-	console.log(`Chosen element in ${dir} direction:`, nextEl);
+	console.log(`Chosen element in ${dir} direction:`, nextEl, '; starting element:', startingElement);
 
 	nextEl?.setAttribute('tabindex', '-1');
 	return nextEl;
@@ -150,7 +152,7 @@ function elementsRelated(firstElement: HTMLElement, secondElement: HTMLElement) 
 	return firstElement.contains(secondElement) || secondElement.contains(firstElement);
 }
 
-const detailedLogging = false; // Turn off for better performance
+const detailedLogging = true; // Turn off for better performance
 // Increase interval for lower precision, but higher performance
 function getElementInRegion(startingElement: HTMLElement, dir: string, minX: number, maxX: number, topY: number, bottomY: number, interval = 15): HTMLElement | undefined {
 	if (minX === -1) minX = 0;
@@ -275,4 +277,24 @@ export function hasNonTextChildren(element: HTMLElement): boolean {
 	}
 
 	return false;
+}
+
+/// Returns the 'top bar' that is the parent of the given element. Only does this if the given element is a child of the top bar (or the top bar container itself)
+export function getTopBar(element: HTMLElement): HTMLElement | undefined {
+	console.log('Top bar testing; ORIGINAL ELEMENT:', element);
+
+	while (element.parentElement && element.parentElement !== document.documentElement) {
+		console.log('Testing element: ', element, element.style);
+
+		const computedStyle = getComputedStyle(element);
+
+		if (computedStyle.position === 'sticky' || computedStyle.position === 'fixed') {
+			console.log(element, 'sticky as hell');
+			return element;
+		}
+
+		element = element.parentElement;
+	}
+
+	return undefined;
 }
