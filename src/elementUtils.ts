@@ -103,27 +103,36 @@ export function worthNavigatingTo(startingElement: HTMLElement, destinationEleme
 			if (startElRect.top <= destElRect.top) return false; // If the top border of the destination element is lower/equal to than the current element's top border, don't mark this the destination element as worth navigating to. Same logic extends to the other three cases.
 
 			if (startingElementScrollView) {
-				if (inScrollView(startingElement)) {
-					if (scrolledToTop(startingElementScrollView) || (startingElementScrollView.contains(destinationElement) && !getFixedParent(destinationElement))) {
-						// Good
-					} else {
-						console.log('returning element', destinationElement, 'as undefined.', inScrollView(startingElement), scrolledToBottom);
-						return false;
-					}
+				if (
+					scrolledToTop(startingElementScrollView) ||
+					(startingElementScrollView.contains(destinationElement) && !getFixedParent(destinationElement)) ||
+					(startingElementScrollView.contains(startingElement) && startingElementScrollView.contains(destinationElement) && startingElementScrollView !== document.documentElement)
+				) {
+					console.log('STARTING ELEMENT SCROLL VIEW:', startingElementScrollView, destinationElement, startingElementScrollView.contains(destinationElement));
+					// Good
+				} else {
+					console.log('returning element', destinationElement, 'as undefined.', inScrollView(startingElement), scrolledToBottom);
+					return false;
 				}
 			}
 			break;
 		case 'down':
 			if (startElRect.bottom >= destElRect.bottom) return false;
 
+			console.log('HERE:', destinationElement, startingElementScrollView);
 			if (destinationElement && startingElementScrollView) {
-				if (inScrollView(startingElement)) {
-					if (scrolledToBottom(startingElementScrollView) || (startingElementScrollView.contains(destinationElement) && !getFixedParent(destinationElement))) {
-						// Good
-					} else {
-						console.log('returning element', destinationElement, 'as undefined.', inScrollView(startingElement), scrolledToBottom);
-						return false;
-					}
+				console.log('HERE #2:', scrolledToBottom(startingElementScrollView), startingElementScrollView.contains(destinationElement), getFixedParent(destinationElement));
+
+				if (
+					scrolledToBottom(startingElementScrollView) ||
+					(startingElementScrollView.contains(destinationElement) && !getFixedParent(destinationElement)) ||
+					(startingElementScrollView.contains(startingElement) && startingElementScrollView.contains(destinationElement) && startingElementScrollView !== document.documentElement)
+				) {
+					// Good
+					console.log('NAVIGATING HERE', destinationElement);
+				} else {
+					console.log('returning element', destinationElement, 'as undefined.', inScrollView(startingElement), scrolledToBottom);
+					return false;
 				}
 			}
 			break;
@@ -344,7 +353,8 @@ export function getFirstScrollView(element: HTMLElement): HTMLElement | undefine
 	let currentElement: HTMLElement | undefined = element;
 
 	while (currentElement) {
-		if (currentElement.scrollHeight > currentElement.clientHeight) {
+		const computedStyle = getComputedStyle(currentElement);
+		if (currentElement.scrollHeight > currentElement.clientHeight && computedStyle.overflowY !== 'hidden') {
 			// Janky test to tell if an element is a valid scroll view or not. If we set the scroll position to 1 and it stays locked at 0, then in reality, it can't scroll.
 			if (currentElement.scrollTop === 0) {
 				currentElement.scrollTop = 1;

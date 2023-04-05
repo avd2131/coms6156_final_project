@@ -89,8 +89,6 @@ export function getReadout(element: HTMLElement, fromParentWithEmptyReadout = fa
 			 */
 
 			if (element.parentElement?.childElementCount === 1) {
-				console.log(element);
-
 				const parentTagName = element.parentElement?.tagName.toLowerCase();
 				if ((parentTagName === 'a' || parentTagName === 'button') && !fromParentWithEmptyReadout) return getReadout(element.parentElement);
 			}
