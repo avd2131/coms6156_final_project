@@ -8,9 +8,9 @@
 		"build": "webpack --config webpack/webpack.prod.js",
 		"clean": "rimraf dist",
 		"test": "npx jest",
-		"style": "prettier --write \"src/**/*.{ts,tsx}\""
+		"style": "prettier --write \"src/**/*.{ts,tsx}\"",
+		"postinstall": "npx patch-package"
 	},
-	"postinstall": "npx patch-package mespeak",
 	"author": "",
 	"license": "MIT",
 	"repository": {
