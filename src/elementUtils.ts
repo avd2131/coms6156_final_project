@@ -325,7 +325,7 @@ export function hasNonTextChildren(element: HTMLElement): boolean {
 	return false;
 }
 
-/// Returns the 'top bar' that is the parent of the given element. Only does this if the given element is a child of the top bar (or the top bar container itself)
+/** Returns the fixed element that is the parent of the given element. */
 export function getFixedParent(element: HTMLElement): HTMLElement | undefined {
 	while (element.parentElement) {
 		const computedStyle = getComputedStyle(element);
@@ -338,6 +338,7 @@ export function getFixedParent(element: HTMLElement): HTMLElement | undefined {
 	return undefined;
 }
 
+/** Returns true if the element is a child of a scroll view */
 export function inScrollView(element: HTMLElement): boolean {
 	let currentElement: HTMLElement | undefined = element;
 
@@ -346,14 +347,17 @@ export function inScrollView(element: HTMLElement): boolean {
 	return getFirstScrollView(currentElement) ? true : false;
 }
 
+/** Returns true if the element has scrolled to the top of the scroll view */
 export function scrolledToTop(scrollView: HTMLElement): boolean {
 	return scrollView.scrollTop === 0;
 }
 
+/** Returns true if the element has scrolled to the bottom of the scroll view */
 export function scrolledToBottom(scrollView: HTMLElement): boolean {
 	return scrollView.scrollTop === scrollView.scrollHeight - scrollView.clientHeight;
 }
 
+/** Gets the first scroll view that the element is a child of. */
 export function getFirstScrollView(element: HTMLElement): HTMLElement | undefined {
 	let currentElement: HTMLElement | undefined = element;
 
@@ -371,6 +375,7 @@ export function getFirstScrollView(element: HTMLElement): HTMLElement | undefine
 			} else return currentElement;
 		}
 
+		// Set the current element to its parent. If the parent is null, then we've reached the top of the DOM tree and should return undefined.
 		currentElement = currentElement.parentElement ?? undefined;
 	}
 

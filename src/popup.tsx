@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
+import ReactSlider from 'react-slider';
+
+import './popup.css';
 
 const Popup = () => {
 	const [scrollFeedback, setScrollFeedback] = useState<boolean>(false);
@@ -7,6 +10,8 @@ const Popup = () => {
 	const [spatializeFeedback, setSpatializeFeedback] = useState<boolean>(false);
 	const [mute, setMute] = useState<boolean>(false);
 	const [elementsOutlined, setElementsOutlined] = useState<boolean>(false);
+	const [leftStereoCutoff, setLeftStereoCutoff] = useState<number>(-1);
+	const [rightStereoCutoff, setRightStereoCutoff] = useState<number>(1);
 
 	useEffect(() => {
 		chrome.storage.sync.get(
@@ -14,13 +19,19 @@ const Popup = () => {
 				scrollFeedback: scrollFeedback,
 				spatialAudio: spatialAudio,
 				spatializeFeedback: spatializeFeedback,
-				mute: mute
+				mute: mute,
+				leftStereoCutoff: leftStereoCutoff,
+				rightStereoCutoff: rightStereoCutoff
 			},
 			(items) => {
 				setScrollFeedback(items.scrollFeedback);
 				setSpatialAudio(items.spatialAudio);
 				setSpatializeFeedback(items.spatializeFeedback);
 				setMute(items.mute);
+				setLeftStereoCutoff(items.leftStereoCutoff);
+				setRightStereoCutoff(items.rightStereoCutoff);
+
+				console.log('loaded options:', items);
 			}
 		);
 	}, []);
@@ -32,14 +43,18 @@ const Popup = () => {
 				scrollFeedback: scrollFeedback,
 				spatialAudio: spatialAudio,
 				spatializeFeedback: spatializeFeedback,
-				mute: mute
+				mute: mute,
+				leftStereoCutoff: leftStereoCutoff,
+				rightStereoCutoff: rightStereoCutoff
 			},
 			() => {
-				console.log('Options saved.');
+				console.log('Options saved.', leftStereoCutoff, rightStereoCutoff);
 			}
 		);
 
 		self.close();
+
+		chrome.tabs.reload();
 	};
 
 	return (
@@ -85,6 +100,45 @@ const Popup = () => {
 						}}
 					/>
 					<p>Spatialize</p>
+				</div>
+				<p>Stereo panning thresholds</p>
+				<div id='sliderContainer'>
+					<div className='slideContainer'>
+						<p>Left</p>
+						<ReactSlider
+							className='horizontal-slider'
+							thumbClassName='slider-thumb'
+							trackClassName='slider-track'
+							value={(1 + leftStereoCutoff) * 100}
+							ariaLabel={'Thumb'}
+							ariaValuetext={(state) => `Thumb value ${(state.valueNow - 100) / 100}`}
+							renderThumb={(props, state) => <div {...props}>{(state.valueNow - 100) / 100}</div>}
+							onAfterChange={(value) => {
+								setLeftStereoCutoff(-(1 - value / 100));
+							}}
+							step={5}
+							pearling
+							minDistance={0}
+						/>
+					</div>
+					<div className='slideContainer'>
+						<p>Right</p>
+						<ReactSlider
+							className='horizontal-slider'
+							thumbClassName='slider-thumb'
+							trackClassName='slider-track'
+							value={rightStereoCutoff * 100}
+							ariaLabel={'Thumb'}
+							ariaValuetext={(state) => `Thumb value ${state.valueNow / 100}`}
+							renderThumb={(props, state) => <div {...props}>{state.valueNow / 100}</div>}
+							onAfterChange={(value) => {
+								setRightStereoCutoff(value / 100);
+							}}
+							step={5}
+							pearling
+							minDistance={0}
+						/>
+					</div>
 				</div>
 				<br></br>
 				<button onClick={() => saveOptions()}>Save</button>

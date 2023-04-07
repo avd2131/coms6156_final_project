@@ -26,7 +26,10 @@ export function setPannerPosition(x: number = 0, y: number = 0, z: number = 5): 
 		return;
 	}
 
-	panner.positionX.value = x * 20;
+	// Write a line of code that clamps paneer.positionX.value between leftStereoCutoff and rightStereoCutoff
+	// and then sets panner.positionX.value to that value.
+
+	panner.positionX.value = Math.min(Math.max(x, leftStereoCutoff), rightStereoCutoff) * 20;
 	panner.positionY.value = y;
 	panner.positionZ.value = z;
 
@@ -39,9 +42,16 @@ let soundPromiseRejectMethods: Map<number, Function> = new Map();
 let soundsPlayed = 0;
 let sources: AudioBufferSourceNode[] = [];
 
+let leftStereoCutoff = -1;
+let rightStereoCutoff = 1;
+
 let spatialAudioEnabled = true;
-chrome.storage.sync.get(['spatialAudio'], (items) => {
+chrome.storage.sync.get(['spatialAudio', 'leftStereoCutoff', 'rightStereoCutoff'], (items) => {
 	spatialAudioEnabled = items.spatialAudio ?? true;
+	leftStereoCutoff = items.leftStereoCutoff ?? -1;
+	rightStereoCutoff = items.rightStereoCutoff ?? 1;
+
+	console.log(leftStereoCutoff, rightStereoCutoff);
 });
 
 export async function playSound(bias: { x: number; y: number }, text: string): Promise<void> {
