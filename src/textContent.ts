@@ -126,30 +126,3 @@ export function getReadout(element: HTMLElement, fromParentWithEmptyReadout = fa
 	if (elementFirst) return elementName + '; ' + elementContent;
 	else return elementContent + '; ' + elementName;
 }
-
-/** Takes the inner HTML of an element and tells whether or not it's readable text. */
-// const validTextContainers = ['p', 'b', 'strong', 'span'];
-// function validText(innerHTML: string): boolean {
-// 	if (innerHTML.includes('<')) {
-// 		// Contains child elements
-// 		let remainingInnerHTML = innerHTML;
-// 		let bracketPos = innerHTML.indexOf('<');
-
-// 		while (remainingInnerHTML.length > 0) {
-// 			remainingInnerHTML.slice(bracketPos); // Includes '<'
-
-// 			// sample:
-// 			// <b>yo</b>
-// 			// sup
-// 			//
-// 			// sample:
-// 			// <strong>hi</strong>
-// 			// hey
-// 			// <strong>hello</strong>
-// 		}
-// 	}
-
-// 	if (innerHTML.trim() === '') return false;
-
-// 	return true;
-// }

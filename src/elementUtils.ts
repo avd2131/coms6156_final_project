@@ -1,10 +1,10 @@
 import { getReadout } from './textContent';
 
+const detailedLogging = false; // Turn off for better performance
+
 /** Gets the horizontal/vertical bias of an onscreen element. Returns x/y biases bounded by -1 & 1. (0 signifies center of screen) */
 export function getBias(element: HTMLElement, roundToTenth = true): { x: number; y: number } {
 	const midpoint = getElementMidpoint(element);
-
-	//console.log('width:', window.innerWidth, 'height:', window.innerHeight, 'midpoint:', midpoint, 'scroll pos:', window.scrollY);
 
 	const bias = { x: midpoint.x / window.innerWidth, y: midpoint.y / window.innerHeight };
 
@@ -78,7 +78,7 @@ export function worthNavigatingTo(startingElement: HTMLElement, destinationEleme
 
 	if (destinationComputedStyle.display === 'none') return false;
 
-	console.log('Checking if element', destinationElement, 'is worth navigating to.');
+	if (detailedLogging) console.log('Checking if element', destinationElement, 'is worth navigating to.');
 
 	// Searches children/parent for valid alternative if element is not suitable for reading. Can result in unintuitive navigation, but solves the problem of missing many elements at a time.
 	if (getReadout(destinationElement) === '') {
@@ -90,8 +90,9 @@ export function worthNavigatingTo(startingElement: HTMLElement, destinationEleme
 			for (var i = 0; i < sortedChildren.length; i++) {
 				const child = sortedChildren[i];
 				if (worthNavigatingTo(startingElement, child as HTMLElement, dir)) {
-					console.log(getReadout(child as HTMLElement));
 					return child as HTMLElement;
+				} else {
+					return worthNavigatingTo(startingElement, child as HTMLElement, dir, true);
 				}
 			}
 		} else return false;
@@ -116,18 +117,19 @@ export function worthNavigatingTo(startingElement: HTMLElement, destinationEleme
 					(startingElementScrollView.contains(destinationElement) && !destElFixed) ||
 					(startingElementScrollView.contains(startingElement) && startingElementScrollView.contains(destinationElement) && startingElementScrollView !== document.documentElement)
 				) {
-					console.log('STARTING ELEMENT SCROLL VIEW:', startingElementScrollView, destinationElement, startingElementScrollView.contains(destinationElement));
 					// Good
 				} else if (destinationElementScrollView && startingElementScrollView !== destinationElementScrollView) {
 					// Good
 				} else {
-					console.log('returning element', destinationElement, 'as undefined.', inScrollView(startingElement), scrolledToBottom);
+					if (detailedLogging) console.log('returning element', destinationElement, 'as undefined.', inScrollView(startingElement), scrolledToBottom(startingElementScrollView));
 					return false;
 				}
 			}
 			break;
 		case 'down':
 			if (startElRect.bottom >= destElRect.bottom) return false;
+
+			let sharedParent;
 
 			if (startingElementScrollView && !startElFixed) {
 				if (
@@ -136,11 +138,14 @@ export function worthNavigatingTo(startingElement: HTMLElement, destinationEleme
 					(startingElementScrollView.contains(startingElement) && startingElementScrollView.contains(destinationElement) && startingElementScrollView !== document.documentElement)
 				) {
 					// Good
-					console.log('NAVIGATING HERE', destinationElement);
 				} else if (destinationElementScrollView && startingElementScrollView !== destinationElementScrollView) {
 					// Good
+				} else if ((sharedParent = getSharedParent(startingElement, destinationElement))) {
+					if (startingElementScrollView.contains(sharedParent)) {
+						// Good
+					} else return false;
 				} else {
-					console.log('returning element', destinationElement, 'as undefined.', inScrollView(startingElement), scrolledToBottom);
+					if (detailedLogging) console.log('returning element', destinationElement, 'as undefined.', inScrollView(startingElement), scrolledToBottom(startingElementScrollView));
 					return false;
 				}
 			}
@@ -176,8 +181,6 @@ export function getElementInDirection(startingElement: HTMLElement | undefined, 
 		case 'up':
 			// y-coordinate is reversed in web
 			nextEl = getElementInRegion(startingElement, dir, rect.left, rect.right, -1, rect.top);
-
-			console.log('TRYNA GO UP', nextEl, startingElementScrollView);
 			break;
 		case 'right':
 			nextEl = getElementInRegion(startingElement, dir, rect.right, -1, rect.top, rect.bottom);
@@ -189,7 +192,7 @@ export function getElementInDirection(startingElement: HTMLElement | undefined, 
 			break;
 	}
 
-	console.log(`Chosen element in ${dir} direction:`, nextEl, '; starting element:', startingElement);
+	if (detailedLogging) console.log(`Chosen element in ${dir} direction:`, nextEl, '; starting element:', startingElement);
 
 	nextEl?.setAttribute('tabindex', '-1');
 	return nextEl;
@@ -200,7 +203,6 @@ function elementsRelated(firstElement: HTMLElement, secondElement: HTMLElement) 
 	return firstElement.contains(secondElement) || secondElement.contains(firstElement);
 }
 
-const detailedLogging = true; // Turn off for better performance
 // Increase interval for lower precision, but higher performance
 function getElementInRegion(startingElement: HTMLElement, dir: string, minX: number, maxX: number, topY: number, bottomY: number, interval = 15): HTMLElement | undefined {
 	if (minX === -1) minX = 0;
@@ -235,7 +237,7 @@ function getElementInRegion(startingElement: HTMLElement, dir: string, minX: num
 				for (let y = topY; y <= bottomY; y += verticalInterval) {
 					let elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
 
-					if (detailedLogging) console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
+					if (detailedLogging) console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow', elementAtPoint);
 
 					let p;
 					if ((p = worthNavigatingTo(startingElement, elementAtPoint, dir, true))) {
@@ -258,7 +260,7 @@ function getElementInRegion(startingElement: HTMLElement, dir: string, minX: num
 				for (let y = topY; y <= bottomY; y += verticalInterval) {
 					let elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
 
-					if (detailedLogging) console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
+					if (detailedLogging) console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow', elementAtPoint);
 
 					let p;
 					if ((p = worthNavigatingTo(startingElement, elementAtPoint, dir, true))) {
@@ -281,7 +283,7 @@ function getElementInRegion(startingElement: HTMLElement, dir: string, minX: num
 				for (let x = minX; x <= maxX; x += horizontalInterval) {
 					let elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
 
-					if (detailedLogging) console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
+					if (detailedLogging) console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow', elementAtPoint);
 
 					let p;
 					if ((p = worthNavigatingTo(startingElement, elementAtPoint, dir, true))) {
@@ -304,7 +306,7 @@ function getElementInRegion(startingElement: HTMLElement, dir: string, minX: num
 				for (let x = minX; x <= maxX; x += horizontalInterval) {
 					let elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
 
-					if (detailedLogging) console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
+					if (detailedLogging) console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow', elementAtPoint);
 
 					let p;
 					if ((p = worthNavigatingTo(startingElement, elementAtPoint, dir, true))) {
@@ -416,7 +418,17 @@ function sortByEdge(elements: HTMLCollection, direction: string): HTMLElement[] 
 		}
 	});
 
-	console.log(direction, sortedElements, sortedElements);
-
 	return sortedElements as HTMLElement[];
+}
+
+export function getSharedParent(element1: HTMLElement, element2: HTMLElement): HTMLElement | undefined {
+	let ancestor: HTMLElement | undefined = element1;
+
+	while (ancestor) {
+		if (ancestor.contains(element2)) break;
+
+		ancestor = ancestor.parentElement ?? undefined;
+	}
+
+	return ancestor;
 }
