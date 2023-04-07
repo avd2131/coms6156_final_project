@@ -8,7 +8,7 @@ export function getBias(element: HTMLElement, roundToTenth = true): { x: number;
 
 	const bias = { x: midpoint.x / window.innerWidth, y: midpoint.y / window.innerHeight };
 
-	let xBias = -1 + 2 * bias.x;
+	let xBias = Math.min(Math.max(-1 + 2 * bias.x, -1), 1); // Clamps xBias between -1 and 1. If the element is off screen in any horizontal direction, its bias will be limited to -1 or 1.
 	let yBias = Math.min(Math.max(1 - 2 * bias.y, -1), 1); // Clamps yBias between -1 and 1. If the element is off screen in any vertical direction, its bias will be limited to -1 or 1.
 
 	if (roundToTenth) {

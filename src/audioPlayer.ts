@@ -111,7 +111,12 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
 
 		// Balancing volume levels
 		const gainNode = audioCtx!.createGain();
-		gainNode.gain.value = 10 + 2 * Math.abs(bias.x); // Gain increases as distance from center increases to help balance out volume levels
+		// gainNode.gain.value = Math.cos((bias.x * Math.PI) / 2); /*10 + 2 * /*Math.abs(bias.x)*/ // Gain increases as distance from center increases to help balance out volume levels
+		gainNode.gain.value = logarithmicIncrease(Math.abs(bias.x));
+
+		console.log(`%cGain amount: ${gainNode.gain.value}; Bias: x: ${bias.x}, y: ${bias.y}`, 'color: lightblue');
+
+		panner?.positionX;
 
 		source.connect(gainNode).connect(panner!).connect(audioCtx!.destination);
 
@@ -152,3 +157,10 @@ export function stopAllSounds() {
 document.addEventListener('keydown', (e) => {
 	if (e.key.toLowerCase() === 'escape') stopAllSounds();
 });
+
+function logarithmicIncrease(x: number) {
+	const maxOutput = 10; // Set the maximum output value
+	const minInput = 0.25; // Set the input value where the curve peaks
+	const k = Math.log(maxOutput + 1) / Math.log(1 + maxOutput * (1 - minInput)); // Calculate the logarithmic scaling factor
+	return (Math.log(1 + maxOutput * x) / Math.log(1 + maxOutput * minInput)) * k + 1; // Apply the logarithmic scaling factor and shift output to start at 1
+}
