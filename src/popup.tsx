@@ -5,13 +5,14 @@ import ReactSlider from 'react-slider';
 import './popup.css';
 
 const Popup = () => {
-	const [scrollFeedback, setScrollFeedback] = useState<boolean>(false);
-	const [spatialAudio, setSpatialAudio] = useState<boolean>(false);
-	const [spatializeFeedback, setSpatializeFeedback] = useState<boolean>(false);
+	const [scrollFeedback, setScrollFeedback] = useState<boolean>(true);
+	const [spatialAudio, setSpatialAudio] = useState<boolean>(true);
+	const [spatializeFeedback, setSpatializeFeedback] = useState<boolean>(true);
 	const [mute, setMute] = useState<boolean>(false);
 	const [elementsOutlined, setElementsOutlined] = useState<boolean>(false);
 	const [leftStereoCutoff, setLeftStereoCutoff] = useState<number>(-1);
 	const [rightStereoCutoff, setRightStereoCutoff] = useState<number>(1);
+	const [voiceSpeed, setVoiceSpeed] = useState<number>(175);
 
 	useEffect(() => {
 		chrome.storage.sync.get(
@@ -21,7 +22,8 @@ const Popup = () => {
 				spatializeFeedback: spatializeFeedback,
 				mute: mute,
 				leftStereoCutoff: leftStereoCutoff,
-				rightStereoCutoff: rightStereoCutoff
+				rightStereoCutoff: rightStereoCutoff,
+				voiceSpeed: voiceSpeed
 			},
 			(items) => {
 				setScrollFeedback(items.scrollFeedback);
@@ -30,6 +32,7 @@ const Popup = () => {
 				setMute(items.mute);
 				setLeftStereoCutoff(items.leftStereoCutoff);
 				setRightStereoCutoff(items.rightStereoCutoff);
+				setVoiceSpeed(items.voiceSpeed);
 
 				console.log('loaded options:', items);
 			}
@@ -45,7 +48,8 @@ const Popup = () => {
 				spatializeFeedback: spatializeFeedback,
 				mute: mute,
 				leftStereoCutoff: leftStereoCutoff,
-				rightStereoCutoff: rightStereoCutoff
+				rightStereoCutoff: rightStereoCutoff,
+				voiceSpeed: voiceSpeed
 			},
 			() => {
 				console.log('Options saved.', leftStereoCutoff, rightStereoCutoff);
@@ -140,9 +144,45 @@ const Popup = () => {
 						/>
 					</div>
 				</div>
+				<div className='slideContainer'>
+					<p>Voice Speed</p>
+					<ReactSlider
+						className='horizontal-slider'
+						thumbClassName='slider-thumb'
+						trackClassName='slider-track'
+						value={voiceSpeed}
+						min={50}
+						max={400}
+						ariaLabel={'Thumb'}
+						ariaValuetext={(state) => `Thumb value ${state.valueNow}`}
+						renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
+						onAfterChange={(value) => {
+							setVoiceSpeed(value);
+						}}
+						step={5}
+						pearling
+						minDistance={0}
+					/>
+				</div>
 				<br></br>
-				<button onClick={() => saveOptions()}>Save</button>
-				<br></br>
+				<div style={{ marginTop: '10px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+					<button onClick={() => saveOptions()}>Save</button>
+					<button
+						onClick={() => {
+							setScrollFeedback(true);
+							setSpatialAudio(true);
+							setSpatializeFeedback(true);
+							setMute(false);
+							setElementsOutlined(false);
+							setLeftStereoCutoff(-1);
+							setRightStereoCutoff(1);
+							setVoiceSpeed(175);
+						}}
+					>
+						Reset to Default
+					</button>
+				</div>
+				{/* <br></br>
 				<br></br>
 				<button
 					onClick={() => {
@@ -154,7 +194,7 @@ const Popup = () => {
 					}}
 				>
 					Toggle element outlines
-				</button>
+				</button> */}
 			</div>
 		</>
 	);

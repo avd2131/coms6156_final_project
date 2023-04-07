@@ -78,13 +78,17 @@ export function worthNavigatingTo(startingElement: HTMLElement, destinationEleme
 
 	if (destinationComputedStyle.display === 'none') return false;
 
+	console.log('Checking if element', destinationElement, 'is worth navigating to.');
+
 	// Searches children/parent for valid alternative if element is not suitable for reading. Can result in unintuitive navigation, but solves the problem of missing many elements at a time.
 	if (getReadout(destinationElement) === '') {
 		if (alt) {
 			if (destinationElement.parentElement) if (worthNavigatingTo(startingElement, destinationElement.parentElement, dir)) return destinationElement.parentElement as HTMLElement;
 
-			for (var i = 0; i < destinationElement.children.length; i++) {
-				const child = destinationElement.children[i];
+			const sortedChildren = sortByEdge(destinationElement.children, dir);
+
+			for (var i = 0; i < sortedChildren.length; i++) {
+				const child = sortedChildren[i];
 				if (worthNavigatingTo(startingElement, child as HTMLElement, dir)) {
 					console.log(getReadout(child as HTMLElement));
 					return child as HTMLElement;
@@ -216,12 +220,19 @@ function getElementInRegion(startingElement: HTMLElement, dir: string, minX: num
 	 * - Right: top-down (lowest to highest y-value)
 	 */
 
+	let horizontalInterval = interval;
+	let verticalInterval = interval;
+
+	// Increased precision for smaller regions
+	if (horizontalInterval / (maxX - minX) < 3) horizontalInterval /= 2;
+	if (verticalInterval / (bottomY - topY) < 3) verticalInterval /= 2;
+
 	switch (dir) {
 		case 'left':
 			if (detailedLogging) console.log(`%cWe be navigating left`, 'color: skyblue');
 
-			for (let x = maxX; x >= minX; x -= interval) {
-				for (let y = topY; y <= bottomY; y += interval) {
+			for (let x = maxX; x >= minX; x -= horizontalInterval) {
+				for (let y = topY; y <= bottomY; y += verticalInterval) {
 					let elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
 
 					if (detailedLogging) console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
@@ -243,8 +254,8 @@ function getElementInRegion(startingElement: HTMLElement, dir: string, minX: num
 		case 'right':
 			if (detailedLogging) console.log(`%cWe be navigating right`, 'color: skyblue');
 
-			for (let x = minX; x <= maxX; x += interval) {
-				for (let y = topY; y <= bottomY; y += interval) {
+			for (let x = minX; x <= maxX; x += horizontalInterval) {
+				for (let y = topY; y <= bottomY; y += verticalInterval) {
 					let elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
 
 					if (detailedLogging) console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
@@ -266,8 +277,8 @@ function getElementInRegion(startingElement: HTMLElement, dir: string, minX: num
 		case 'up':
 			if (detailedLogging) console.log('%cWe be navigating up', 'color: skyblue');
 
-			for (let y = bottomY; y >= topY; y -= interval) {
-				for (let x = minX; x <= maxX; x += interval) {
+			for (let y = bottomY; y >= topY; y -= verticalInterval) {
+				for (let x = minX; x <= maxX; x += horizontalInterval) {
 					let elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
 
 					if (detailedLogging) console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
@@ -289,8 +300,8 @@ function getElementInRegion(startingElement: HTMLElement, dir: string, minX: num
 		case 'down':
 			if (detailedLogging) console.log('%cWe be navigating down', 'color: skyblue');
 
-			for (let y = topY; y <= bottomY; y += interval) {
-				for (let x = minX; x <= maxX; x += interval) {
+			for (let y = topY; y <= bottomY; y += verticalInterval) {
+				for (let x = minX; x <= maxX; x += horizontalInterval) {
 					let elementAtPoint = document.elementFromPoint(x, y) as HTMLElement;
 
 					if (detailedLogging) console.log(`%cSearching for element at (${x}, ${y})`, 'color: yellow');
@@ -380,4 +391,32 @@ export function getFirstScrollView(element: HTMLElement): HTMLElement | undefine
 	}
 
 	return undefined;
+}
+
+function sortByEdge(elements: HTMLCollection, direction: string): HTMLElement[] {
+	const sortedElements = Array.from(elements).sort((a, b) => {
+		const aRect = a.getBoundingClientRect();
+		const bRect = b.getBoundingClientRect();
+
+		switch (direction) {
+			case 'up':
+				// highest bottom values first
+				return bRect.bottom - aRect.bottom;
+			case 'down':
+				// lowest top values first
+				return aRect.top - bRect.top;
+			case 'left':
+				// highest right values first
+				return bRect.right - aRect.right;
+			case 'right':
+				// lowest left values first
+				return aRect.left - bRect.left;
+			default:
+				return 0;
+		}
+	});
+
+	console.log(direction, sortedElements, sortedElements);
+
+	return sortedElements as HTMLElement[];
 }

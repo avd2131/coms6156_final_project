@@ -1,4 +1,5 @@
 import { hasNonTextChildren } from './elementUtils';
+import { isNumeric } from './stringUtils';
 
 const logElementDetails = false;
 
@@ -26,7 +27,10 @@ export function getReadout(element: HTMLElement, fromParentWithEmptyReadout = fa
 		console.log('Labeled by:', labelElement, '; element content: ', elementContent);
 	}
 
-	const elTag = element.tagName.toLowerCase();
+	let elementRole = element.getAttribute('role');
+
+	const elTag = elementRole ? elementRole : element.tagName.toLowerCase();
+
 	switch (elTag) {
 		case 'a':
 			// If the link itself doesn't have any content, run a query selector on the first element with either alt or aria-label on it and re-run this function with it
@@ -40,6 +44,7 @@ export function getReadout(element: HTMLElement, fromParentWithEmptyReadout = fa
 				if (firstChildWithInfo) return getReadout(firstChildWithInfo as HTMLElement, true);
 			}
 			break;
+		case 'heading':
 		case 'h1':
 		case 'h2':
 		case 'h3':
@@ -47,8 +52,8 @@ export function getReadout(element: HTMLElement, fromParentWithEmptyReadout = fa
 		case 'h5':
 		case 'h6':
 			elementFirst = false;
-
-			elementName = `heading level ${elTag.slice(-1)}`;
+			if (!isNumeric(elTag.slice(-1))) elementName = 'heading';
+			else elementName = `heading level ${elTag.slice(-1)}`;
 
 			elementContent = element.innerText;
 			break;

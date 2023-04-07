@@ -45,13 +45,14 @@ let sources: AudioBufferSourceNode[] = [];
 let leftStereoCutoff = -1;
 let rightStereoCutoff = 1;
 
+let voiceSpeed = 175;
+
 let spatialAudioEnabled = true;
-chrome.storage.sync.get(['spatialAudio', 'leftStereoCutoff', 'rightStereoCutoff'], (items) => {
+chrome.storage.sync.get(['spatialAudio', 'leftStereoCutoff', 'rightStereoCutoff', 'voiceSpeed'], (items) => {
 	spatialAudioEnabled = items.spatialAudio ?? true;
 	leftStereoCutoff = items.leftStereoCutoff ?? -1;
 	rightStereoCutoff = items.rightStereoCutoff ?? 1;
-
-	console.log(leftStereoCutoff, rightStereoCutoff);
+	voiceSpeed = items.voiceSpeed ?? 175;
 });
 
 export async function playSound(bias: { x: number; y: number }, text: string): Promise<void> {
@@ -92,7 +93,7 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
 
 		// Using MeSpeak
 		if (!playBeep) {
-			const audioData = meSpeak.speak(text, { rawdata: true });
+			const audioData = meSpeak.speak(text, { speed: voiceSpeed, rawdata: true });
 			source.buffer = await audioCtx!.decodeAudioData(audioData);
 		} else {
 			if (!beepArrayBuffer) console.error('There was an error in loading the beep sound file.');
