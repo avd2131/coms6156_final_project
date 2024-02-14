@@ -1,16 +1,16 @@
-import { getElementInDirection, getFirstScrollView, scrolledToBottom, scrolledToTop } from './elementUtils';
-import { verticalScrollStatus } from './scroll';
+import { getElementInDirection, getFirstScrollView, scrolledToBottom, scrolledToTop } from "./elementUtils";
+import { verticalScrollStatus } from "./scroll";
 
 export let lastFocusedElement: HTMLElement | undefined;
 
 export function setLastFocusedElement(element: HTMLElement) {
-	lastFocusedElement = element;
+  lastFocusedElement = element;
 }
 
 export function initializeNavigationListeners() {
-	document.addEventListener('keydown', async (e) => {
-		navigate(e.key, true);
-	});
+  document.addEventListener("keydown", async (e) => {
+    navigate(e.key, true);
+  });
 }
 
 const scrollPauseInterval = 50;
@@ -18,111 +18,111 @@ const scrollPauseInterval = 50;
 let attemptingNavigation = false;
 let keyPressDuringNavigation = false;
 async function navigate(key: string, fromKeypress: boolean) {
-	let nextEl: HTMLElement | undefined;
+  let nextEl: HTMLElement | undefined;
 
-	if (!lastFocusedElement) return;
+  if (!lastFocusedElement) return;
 
-	if (!attemptingNavigation) keyPressDuringNavigation = false;
-	if (attemptingNavigation && fromKeypress) keyPressDuringNavigation = true;
+  if (!attemptingNavigation) keyPressDuringNavigation = false;
+  if (attemptingNavigation && fromKeypress) keyPressDuringNavigation = true;
 
-	switch (key.toLowerCase()) {
-		case 'w': // Move up
-			attemptingNavigation = true;
+  switch (key.toLowerCase()) {
+    case "w": // Move up
+      attemptingNavigation = true;
 
-			nextEl = getElementInDirection(lastFocusedElement, 'up');
+      nextEl = getElementInDirection(lastFocusedElement, "up");
 
-			if (nextEl) {
-				// Element found
-				nextEl.focus();
+      if (nextEl) {
+        // Element found
+        nextEl.focus();
 
-				attemptingNavigation = false;
-			} else {
-				// No element found
-				const scrollView = getFirstScrollView(lastFocusedElement);
+        attemptingNavigation = false;
+      } else {
+        // No element found
+        const scrollView = getFirstScrollView(lastFocusedElement);
 
-				if (scrollView && !scrolledToTop(scrollView) && !keyPressDuringNavigation) {
-					console.log('scrolling up...');
+        if (scrollView && !scrolledToTop(scrollView) && !keyPressDuringNavigation) {
+          await sleep(scrollPauseInterval);
 
-					await sleep(scrollPauseInterval);
+          scrollView.scrollBy(0, -300);
 
-					scrollView.scrollBy(0, -300);
+          navigate("w", false);
+        } else if (verticalScrollStatus !== "top" && verticalScrollStatus !== "noscroll" && !keyPressDuringNavigation) {
+          // Scroll up and try looking for elements again
+          await sleep(scrollPauseInterval);
 
-					navigate('w', false);
-				} else if (verticalScrollStatus !== 'top' && verticalScrollStatus !== 'noscroll' && !keyPressDuringNavigation) {
-					// Scroll up and try looking for elements again
-					console.log('scrolling up...');
+          window.scrollBy(0, -300);
 
-					await sleep(scrollPauseInterval);
+          navigate("w", false);
+        } else attemptingNavigation = false;
+      }
+      break;
+    case "a": // Move left
+      attemptingNavigation = true;
 
-					window.scrollBy(0, -300);
+      nextEl = getElementInDirection(lastFocusedElement, "left");
 
-					navigate('w', false);
-				} else attemptingNavigation = false;
-			}
-			break;
-		case 'a': // Move left
-			attemptingNavigation = true;
+      if (nextEl) {
+        // Element found
+        nextEl.focus();
+      }
 
-			nextEl = getElementInDirection(lastFocusedElement, 'left');
+      attemptingNavigation = false;
+      break;
+    case "s": // Move down
+      attemptingNavigation = true;
 
-			if (nextEl) {
-				// Element found
-				nextEl.focus();
-			}
+      nextEl = getElementInDirection(lastFocusedElement, "down");
 
-			attemptingNavigation = false;
-			break;
-		case 's': // Move down
-			attemptingNavigation = true;
+      if (nextEl) {
+        console.log("focusing on element:", nextEl);
 
-			nextEl = getElementInDirection(lastFocusedElement, 'down');
+        // Element found
+        nextEl.focus();
 
-			if (nextEl) {
-				console.log('focusing on element:', nextEl);
+        attemptingNavigation = false;
+      } else {
+        // No element found
+        const scrollView = getFirstScrollView(lastFocusedElement);
+        if (scrollView && !scrolledToBottom(scrollView) && !keyPressDuringNavigation) {
+          console.trace("scrolling down...");
 
-				// Element found
-				nextEl.focus();
+          await sleep(scrollPauseInterval);
 
-				attemptingNavigation = false;
-			} else {
-				// No element found
-				const scrollView = getFirstScrollView(lastFocusedElement);
-				if (scrollView && !scrolledToBottom(scrollView) && !keyPressDuringNavigation) {
-					console.trace('scrolling down...');
+          scrollView.scrollBy(0, 300);
 
-					await sleep(scrollPauseInterval);
+          navigate("s", false);
+        } else if (
+          verticalScrollStatus !== "bottom" &&
+          verticalScrollStatus !== "noscroll" &&
+          !keyPressDuringNavigation
+        ) {
+          // Scroll down and try looking for elements again
+          console.trace("scrolling down...");
 
-					scrollView.scrollBy(0, 300);
+          await sleep(scrollPauseInterval);
 
-					navigate('s', false);
-				} else if (verticalScrollStatus !== 'bottom' && verticalScrollStatus !== 'noscroll' && !keyPressDuringNavigation) {
-					// Scroll down and try looking for elements again
-					console.trace('scrolling down...');
+          window.scrollBy(0, 300);
 
-					await sleep(scrollPauseInterval);
+          navigate("s", false);
+        } else attemptingNavigation = false;
+      }
+      break;
+    case "d": // Move right
+      attemptingNavigation = true;
 
-					window.scrollBy(0, 300);
+      nextEl = getElementInDirection(lastFocusedElement, "right");
 
-					navigate('s', false);
-				} else attemptingNavigation = false;
-			}
-			break;
-		case 'd': // Move right
-			attemptingNavigation = true;
+      if (nextEl) {
+        // Element found
+        nextEl.focus();
+      }
 
-			nextEl = getElementInDirection(lastFocusedElement, 'right');
+      attemptingNavigation = false;
 
-			if (nextEl) {
-				// Element found
-				nextEl.focus();
-			}
-
-			attemptingNavigation = false;
-
-			break;
-	}
+      break;
+  }
 }
 
 const sleep = (ms: number) => {
-	return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 };

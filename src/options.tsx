@@ -42,10 +42,8 @@ const Options = () => {
   return (
     <>
       <div>
-        Favorite color: <select
-          value={color}
-          onChange={(event) => setColor(event.target.value)}
-        >
+        Favorite color:
+        <select value={color} onChange={(event) => setColor(event.target.value)}>
           <option value="red">red</option>
           <option value="green">green</option>
           <option value="blue">blue</option>
@@ -54,12 +52,7 @@ const Options = () => {
       </div>
       <div>
         <label>
-          <input
-            type="checkbox"
-            checked={like}
-            onChange={(event) => setLike(event.target.checked)}
-          />
-          I like colors.
+          <input type="checkbox" checked={like} onChange={(event) => setLike(event.target.checked)} />I like colors.
         </label>
       </div>
       <div>{status}</div>

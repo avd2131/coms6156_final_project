@@ -1,15 +1,19 @@
 h3 {
-	white-space: nowrap;
+  white-space: nowrap;
+}
+
+h4 {
+  margin: 4px 0;
 }
 
 .checkbox-wrapper {
-	height: 25px;
+  height: 25px;
 
-	display: flex;
-	align-items: center;
-	gap: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 #spatializeFeedbackCheckboxWrapper {
-	margin-left: 15px;
+  margin-left: 15px;
 }
