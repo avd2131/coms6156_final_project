@@ -1,3 +1,4 @@
+import { Direction } from "./direction";
 import { getReadout } from "./textContent";
 
 let detailedLogging = false;
@@ -31,7 +32,7 @@ export function getElementMidpoint(element: HTMLElement) {
 
 const baseBuffer = 5;
 let buffer = baseBuffer; //px
-export function getElementStartingPoints(element: HTMLElement, dir: string) {
+export function getElementStartingPoints(element: HTMLElement, dir: Direction) {
   if (!element) {
     console.error("Provided element doesn't exist.");
     return undefined;
@@ -42,25 +43,25 @@ export function getElementStartingPoints(element: HTMLElement, dir: string) {
   buffer = baseBuffer + rect.height / 100;
 
   switch (dir) {
-    case "left":
+    case Direction.Left:
       return [
         { x: rect.left, y: rect.bottom - buffer },
         { x: rect.left, y: rect.bottom - rect.height / 2 },
         { x: rect.left, y: rect.top + buffer },
       ];
-    case "right":
+    case Direction.Right:
       return [
         { x: rect.right, y: rect.bottom - buffer },
         { x: rect.right, y: rect.bottom - rect.height / 2 },
         { x: rect.right, y: rect.top + buffer },
       ];
-    case "up":
+    case Direction.Up:
       return [
         { x: rect.left + buffer, y: rect.top },
         { x: rect.left + rect.width / 2, y: rect.top },
         { x: rect.right - buffer, y: rect.top },
       ];
-    case "down":
+    case Direction.Down:
       return [
         { x: rect.left + buffer, y: rect.bottom },
         { x: rect.left + rect.width / 2, y: rect.bottom },
@@ -75,7 +76,7 @@ export function getElementStartingPoints(element: HTMLElement, dir: string) {
 export function worthNavigatingTo(
   startingElement: HTMLElement,
   destinationElement: HTMLElement,
-  dir: string,
+  dir: Direction,
   alt = false
 ): boolean | HTMLElement {
   if (!startingElement || !destinationElement) return false;
@@ -111,77 +112,84 @@ export function worthNavigatingTo(
   const startElRect = startingElement.getBoundingClientRect();
   const destElRect = destinationElement.getBoundingClientRect();
 
-  const startingElementScrollView = getFirstScrollView(startingElement);
-  const destinationElementScrollView = getFirstScrollView(destinationElement);
+  /** Nearest parent scroll view to starting element (if it exists) */
+  const startElScrollView = getFirstScrollView(startingElement);
+  /** Nearest parent scroll view to destination element (if it exists) */
+  const destElScrollView = getFirstScrollView(destinationElement);
 
+  /** Is the starting element fixed? */
   const startElFixed = getFixedParent(startingElement) ? true : false;
+  /** Is the destination element fixed? */
   const destElFixed = getFixedParent(destinationElement) ? true : false;
 
-  switch (dir) {
-    case "up":
-      if (startElRect.top <= destElRect.top) return false; // If the top border of the destination element is lower/equal to than the current element's top border, don't mark this the destination element as worth navigating to. Same logic extends to the other three cases.
+  const elementsInSameScrollView =
+    startElScrollView?.contains(startingElement) && startElScrollView?.contains(destinationElement);
 
-      if (startingElementScrollView && !startElFixed) {
-        if (
-          scrolledToTop(startingElementScrollView) ||
-          (startingElementScrollView.contains(destinationElement) && !destElFixed) ||
-          (startingElementScrollView.contains(startingElement) &&
-            startingElementScrollView.contains(destinationElement) &&
-            startingElementScrollView !== document.documentElement)
-        ) {
-          // Good
-        } else if (destinationElementScrollView && startingElementScrollView !== destinationElementScrollView) {
-          // Good
-        } else {
-          if (detailedLogging)
-            console.log(
-              "returning element",
-              destinationElement,
-              "as undefined.",
-              inScrollView(startingElement),
-              scrolledToBottom(startingElementScrollView)
-            );
-          return false;
-        }
+  switch (dir) {
+    case Direction.Up:
+      // If the top border of the destination element is lower/equal to than the current element's top border,
+      // don't mark this the destination element as worth navigating to. Same logic extends to the other three cases.
+      if (startElRect.top <= destElRect.top) return false;
+
+      // If the current element isn't in a scrollview or it's fixed, the destination element should be considered navigable.
+      if (!startElScrollView || startElFixed) return true;
+
+      if (
+        scrolledToTop(startElScrollView) ||
+        (startElScrollView.contains(destinationElement) && !destElFixed) ||
+        (elementsInSameScrollView && startElScrollView !== document.documentElement)
+      ) {
+        // Good
+      } else if (destElScrollView && startElScrollView !== destElScrollView) {
+        // Good
+      } else {
+        if (detailedLogging)
+          console.log(
+            "returning element",
+            destinationElement,
+            "as undefined.",
+            inScrollView(startingElement),
+            scrolledToBottom(startElScrollView)
+          );
+        return false;
       }
       break;
-    case "down":
+    case Direction.Down:
       if (startElRect.bottom >= destElRect.bottom) return false;
+
+      // If the current element isn't in a scrollview or it's fixed, the destination element should be considered navigable.
+      if (!startElScrollView || startElFixed) return true;
 
       let sharedParent;
 
-      if (startingElementScrollView && !startElFixed) {
-        if (
-          scrolledToBottom(startingElementScrollView) ||
-          (startingElementScrollView.contains(destinationElement) && !getFixedParent(destinationElement)) ||
-          (startingElementScrollView.contains(startingElement) &&
-            startingElementScrollView.contains(destinationElement) &&
-            startingElementScrollView !== document.documentElement)
-        ) {
+      if (
+        scrolledToBottom(startElScrollView) ||
+        (startElScrollView.contains(destinationElement) && !getFixedParent(destinationElement)) ||
+        (elementsInSameScrollView && startElScrollView !== document.documentElement)
+      ) {
+        // Good
+      } else if (destElScrollView && startElScrollView !== destElScrollView) {
+        // Good
+      } else if ((sharedParent = getSharedParent(startingElement, destinationElement))) {
+        if (startElScrollView.contains(sharedParent)) {
           // Good
-        } else if (destinationElementScrollView && startingElementScrollView !== destinationElementScrollView) {
-          // Good
-        } else if ((sharedParent = getSharedParent(startingElement, destinationElement))) {
-          if (startingElementScrollView.contains(sharedParent)) {
-            // Good
-          } else return false;
-        } else {
-          if (detailedLogging)
-            console.log(
-              "returning element",
-              destinationElement,
-              "as undefined.",
-              inScrollView(startingElement),
-              scrolledToBottom(startingElementScrollView)
-            );
-          return false;
-        }
+        } else return false;
+      } else {
+        if (detailedLogging)
+          console.log(
+            "returning element",
+            destinationElement,
+            "as undefined.",
+            inScrollView(startingElement),
+            scrolledToBottom(startElScrollView)
+          );
+        return false;
       }
       break;
-    case "left":
+    case Direction.Left:
       if (startElRect.left <= destElRect.left) return false;
       break;
-    case "right":
+    case Direction.Right:
       if (startElRect.right >= destElRect.right) return false;
       break;
   }
@@ -192,31 +200,57 @@ export function worthNavigatingTo(
 /** Gets element in a certain direction (up, down, left, right)
  * - Element is only detected if readable by `getReadout()` in textContent.ts
  */
-export function getElementInDirection(startingElement: HTMLElement | undefined, dir: string): HTMLElement | undefined {
+export function getElementInDirection(
+  startingElement: HTMLElement | undefined,
+  dir: Direction
+): HTMLElement | undefined {
   let nextEl: HTMLElement | undefined;
 
   if (!startingElement) return undefined;
 
   nextEl = startingElement;
-
   const rect = startingElement.getBoundingClientRect();
-  const startingElementScrollView = getFirstScrollView(startingElement);
 
   switch (dir) {
-    case "left":
-      nextEl = getElementInRegion(startingElement, dir, -1, rect.left, rect.top, rect.bottom);
+    case Direction.Left:
+      nextEl = getElementInRegion({
+        startingElement,
+        dir,
+        minX: -1,
+        maxX: rect.left,
+        topY: rect.top,
+        bottomY: rect.bottom,
+      });
       break;
-    case "up":
-      // y-coordinate is reversed in web
-      nextEl = getElementInRegion(startingElement, dir, rect.left, rect.right, -1, rect.top);
+    case Direction.Up:
+      nextEl = getElementInRegion({
+        startingElement,
+        dir,
+        minX: rect.left,
+        maxX: rect.right,
+        topY: -1,
+        bottomY: rect.top,
+      });
       break;
-    case "right":
-      nextEl = getElementInRegion(startingElement, dir, rect.right, -1, rect.top, rect.bottom);
-
+    case Direction.Right:
+      nextEl = getElementInRegion({
+        startingElement,
+        dir,
+        minX: rect.right,
+        maxX: -1,
+        topY: rect.top,
+        bottomY: rect.bottom,
+      });
       break;
-    case "down":
-      // y-coordinate is reversed in web
-      nextEl = getElementInRegion(startingElement, dir, rect.left, rect.right, rect.bottom, -1);
+    case Direction.Down:
+      nextEl = getElementInRegion({
+        startingElement,
+        dir,
+        minX: rect.left,
+        maxX: rect.right,
+        topY: rect.bottom,
+        bottomY: -1,
+      });
       break;
   }
 
@@ -233,15 +267,25 @@ function elementsRelated(firstElement: HTMLElement, secondElement: HTMLElement) 
 }
 
 // Increase interval for lower precision, but higher performance
-function getElementInRegion(
-  startingElement: HTMLElement,
-  dir: string,
-  minX: number,
-  maxX: number,
-  topY: number,
-  bottomY: number,
-  interval = 15
-): HTMLElement | undefined {
+interface GetElementInRegionOptions {
+  startingElement: HTMLElement;
+  minX: number;
+  maxX: number;
+  topY: number;
+  bottomY: number;
+  dir: Direction;
+  interval?: number;
+}
+
+function getElementInRegion({
+  startingElement,
+  dir,
+  minX,
+  maxX,
+  topY,
+  bottomY,
+  interval = 15,
+}: GetElementInRegionOptions): HTMLElement | undefined {
   if (minX === -1) minX = 0;
   if (maxX === -1) maxX = window.innerWidth;
   if (topY === -1) topY = 0;
@@ -267,7 +311,7 @@ function getElementInRegion(
   if (verticalInterval / (bottomY - topY) < 3) verticalInterval /= 2;
 
   switch (dir) {
-    case "left":
+    case Direction.Left:
       if (detailedLogging) console.log(`%c Navigating left`, "color: skyblue");
 
       for (let x = maxX; x >= minX; x -= horizontalInterval) {
@@ -290,7 +334,7 @@ function getElementInRegion(
         }
       }
       break;
-    case "right":
+    case Direction.Right:
       if (detailedLogging) console.log(`%c Navigating right`, "color: skyblue");
 
       for (let x = minX; x <= maxX; x += horizontalInterval) {
@@ -313,7 +357,7 @@ function getElementInRegion(
         }
       }
       break;
-    case "up":
+    case Direction.Up:
       if (detailedLogging) console.log("%c Navigating up", "color: skyblue");
 
       for (let y = bottomY; y >= topY; y -= verticalInterval) {
@@ -336,7 +380,7 @@ function getElementInRegion(
         }
       }
       break;
-    case "down":
+    case Direction.Down:
       if (detailedLogging) console.log("%c Navigating down", "color: skyblue");
 
       for (let y = topY; y <= bottomY; y += verticalInterval) {
@@ -407,7 +451,9 @@ export function scrolledToBottom(scrollView: HTMLElement): boolean {
   return scrollView.scrollTop === scrollView.scrollHeight - scrollView.clientHeight;
 }
 
-/** Gets the first scroll view that the element is a child of. */
+/** Gets the first scroll view that the element is a child of.
+ * - If the element is not a child of a scroll view, this returns undefined.
+ */
 export function getFirstScrollView(element: HTMLElement): HTMLElement | undefined {
   let currentElement: HTMLElement | undefined = element;
 
@@ -432,22 +478,22 @@ export function getFirstScrollView(element: HTMLElement): HTMLElement | undefine
   return undefined;
 }
 
-function sortByEdge(elements: HTMLCollection, direction: string): HTMLElement[] {
+function sortByEdge(elements: HTMLCollection, direction: Direction): HTMLElement[] {
   const sortedElements = Array.from(elements).sort((a, b) => {
     const aRect = a.getBoundingClientRect();
     const bRect = b.getBoundingClientRect();
 
     switch (direction) {
-      case "up":
+      case Direction.Up:
         // highest bottom values first
         return bRect.bottom - aRect.bottom;
-      case "down":
+      case Direction.Down:
         // lowest top values first
         return aRect.top - bRect.top;
-      case "left":
+      case Direction.Left:
         // highest right values first
         return bRect.right - aRect.right;
-      case "right":
+      case Direction.Right:
         // lowest left values first
         return aRect.left - bRect.left;
       default:

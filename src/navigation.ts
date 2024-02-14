@@ -1,3 +1,4 @@
+import { Direction } from "./direction";
 import { getElementInDirection, getFirstScrollView, scrolledToBottom, scrolledToTop } from "./elementUtils";
 import { verticalScrollStatus } from "./scroll";
 
@@ -29,7 +30,7 @@ async function navigate(key: string, fromKeypress: boolean) {
     case "w": // Move up
       attemptingNavigation = true;
 
-      nextEl = getElementInDirection(lastFocusedElement, "up");
+      nextEl = getElementInDirection(lastFocusedElement, Direction.Up);
 
       if (nextEl) {
         // Element found
@@ -59,7 +60,7 @@ async function navigate(key: string, fromKeypress: boolean) {
     case "a": // Move left
       attemptingNavigation = true;
 
-      nextEl = getElementInDirection(lastFocusedElement, "left");
+      nextEl = getElementInDirection(lastFocusedElement, Direction.Left);
 
       if (nextEl) {
         // Element found
@@ -71,7 +72,7 @@ async function navigate(key: string, fromKeypress: boolean) {
     case "s": // Move down
       attemptingNavigation = true;
 
-      nextEl = getElementInDirection(lastFocusedElement, "down");
+      nextEl = getElementInDirection(lastFocusedElement, Direction.Down);
 
       if (nextEl) {
         console.log("focusing on element:", nextEl);
@@ -110,7 +111,7 @@ async function navigate(key: string, fromKeypress: boolean) {
     case "d": // Move right
       attemptingNavigation = true;
 
-      nextEl = getElementInDirection(lastFocusedElement, "right");
+      nextEl = getElementInDirection(lastFocusedElement, Direction.Right);
 
       if (nextEl) {
         // Element found
