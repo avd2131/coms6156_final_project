@@ -31,13 +31,13 @@ document.addEventListener(
       lastScrollYPos = window.scrollY;
 
       if (scrollFeedback && !mute)
-        await playSound(
-          spatializeFeedback ? { x: getBias(lastFocusedElement!).x, y: -1 } : { x: 0, y: 0 },
-          "_scroll-indicator_"
-        );
+        await playSound({
+          bias: spatializeFeedback ? { x: getBias(lastFocusedElement!).x, y: -1 } : { x: 0, y: 0 },
+          scrollBeep: true,
+        });
     }
 
-    if (!mute) playSound(getBias(activeElement), getReadout(activeElement));
+    if (!mute) playSound({ bias: getBias(activeElement), text: getReadout(activeElement) });
   },
   true
 );

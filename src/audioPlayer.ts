@@ -28,9 +28,6 @@ export function setPannerPosition(x: number = 0, y: number = 0, z: number = 5): 
     return;
   }
 
-  // Write a line of code that clamps paneer.positionX.value between leftStereoCutoff and rightStereoCutoff
-  // and then sets panner.positionX.value to that value.
-
   panner.positionX.value = Math.min(Math.max(x, leftStereoCutoff), rightStereoCutoff) * 20;
   panner.positionY.value = y;
   panner.positionZ.value = z;
@@ -54,30 +51,26 @@ chrome.storage.sync.get(["spatialAudio", "leftStereoCutoff", "rightStereoCutoff"
   voiceSpeed = items.voiceSpeed ?? 175;
 });
 
-export async function playSound(bias: { x: number; y: number }, text: string): Promise<void> {
-  // Don't waste any resources with empty strings.
+interface PlaySoundProps {
+  bias: { x: number; y: number };
+  text?: string;
+  scrollBeep?: boolean;
+}
+
+export async function playSound({ bias, text, scrollBeep = false }: PlaySoundProps): Promise<void> {
   if (text === "") return;
 
-  if (!spatialAudioEnabled) bias = { x: 0, y: 0 };
-
-  let playBeep = false;
-  if (text === "_scroll-indicator_") {
-    // Special behavior to play scroll sound
-    // Royalty free beep: https://samplefocus.com/samples/short-beep
-    playBeep = true;
-
-    console.log("attempting to play beep...");
-  }
-
-  if (!audioCtx) {
-    audioCtx = new AudioContext();
-    panner = audioCtx.createPanner();
-
-    beepAudioBuffer = await audioCtx.decodeAudioData(beepArrayBuffer);
-  }
-
   return new Promise(async (resolve, reject) => {
-    await audioCtx!.resume();
+    if (!spatialAudioEnabled) bias = { x: 0, y: 0 };
+
+    if (!audioCtx) {
+      audioCtx = new AudioContext();
+      panner = audioCtx.createPanner();
+
+      beepAudioBuffer = await audioCtx.decodeAudioData(beepArrayBuffer);
+    }
+
+    await audioCtx.resume();
 
     const id = soundsPlayed++;
 
@@ -86,17 +79,23 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
     // Prevent multiple sounds from playing at the same time
     await stopAllSounds();
 
-    let source = audioCtx!.createBufferSource();
+    let source = audioCtx.createBufferSource();
     lastSoundSource = { sourceNode: source, id: id };
     sources.push(source);
 
-    // Using MeSpeak
-    if (!playBeep) {
+    if (!scrollBeep) {
+      // TTS using MeSpeak
       const audioData = meSpeak.speak(text, { speed: voiceSpeed, rawdata: true });
-      source.buffer = await audioCtx!.decodeAudioData(audioData);
+      source.buffer = await audioCtx.decodeAudioData(audioData);
     } else {
-      if (!beepArrayBuffer) console.error("There was an error in loading the beep sound file.");
-      else source.buffer = beepAudioBuffer;
+      // Royalty free beep: https://samplefocus.com/samples/short-beep
+      if (!beepArrayBuffer) {
+        console.error("There was an error in loading the beep sound file.");
+        reject();
+        return;
+      }
+
+      source.buffer = beepAudioBuffer;
     }
 
     source.onended = () => {
@@ -110,12 +109,12 @@ export async function playSound(bias: { x: number; y: number }, text: string): P
     source.detune.value = pitchConst * panner!.positionY.value;
 
     // Balancing volume levels
-    const gainNode = audioCtx!.createGain();
+    const gainNode = audioCtx.createGain();
     gainNode.gain.value = logarithmicIncrease(Math.abs(bias.x)); // Gain increases as distance from center increases to help balance out volume levels
 
     console.log(`%cGain amount: ${gainNode.gain.value}; Bias: x: ${bias.x}, y: ${bias.y}`, "color: lightblue");
 
-    source.connect(gainNode).connect(panner!).connect(audioCtx!.destination);
+    source.connect(gainNode).connect(panner!).connect(audioCtx.destination);
 
     source.start(0);
   });
