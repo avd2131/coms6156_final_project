@@ -1,6 +1,8 @@
-# spatial-interactions-extension
+# Spatial Interactions Extension
 
 This project builds a web extension to enable an in-house screen reader experience with spatial interactions such as directional arrow-key navigation and spatial audio outputs.
+
+Project page: https://ceal.cs.columbia.edu/spatialinteractions/
 
 # Architecture Overview
 
@@ -11,10 +13,6 @@ This project builds a web extension to enable an in-house screen reader experien
 3. Spatialize corresponding audio.
 
 4. If user scrolls the page we will need to repeat this pre-processing.
-
-To Test: On-demand spatialization.
-
-Intended user experience: users keyboard around and hear spatialized audio of each element.
 
 ## Build Instructions
 
@@ -27,3 +25,15 @@ or
 `npm run watch` (hot reload)
 
 on this directory.
+
+## Running locally
+1. Build extension with build instructions
+2. Navigate to `chrome://extensions`
+    -  _note: Enable developer mode (toggle located on top-right of page) if not already enabled_
+3. Click 'Load unpacked' button
+4. Find and select the `dist/` folder located in the project root folder
+
+**Prerequisites**
+
+- Node v18 LTS or greater
+- npm
