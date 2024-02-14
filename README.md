@@ -16,15 +16,10 @@ Project page: https://ceal.cs.columbia.edu/spatialinteractions/
 
 ## Build Instructions
 
-Install npm if not already installed, and run
+From this directory,
+1. `npm install`
 
-`npm run build` (one-time build)
-
-or
-
-`npm run watch` (hot reload)
-
-on this directory.
+2. `npm run build` (one-time build) or `npm run watch` (hot reload)
 
 ## Running locally
 1. Build extension with build instructions
