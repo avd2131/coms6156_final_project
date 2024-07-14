@@ -133,7 +133,7 @@ const Popup = () => {
             minDistance={0}
           />
         </div>
-        <br></br>
+        <br />
         <h4>Developer</h4>
         <button
           onClick={() => {
@@ -164,7 +164,7 @@ const Popup = () => {
           <button onClick={() => saveOptions()}>Save</button>
           <button onClick={resetSettings}>Reset to Default</button>
         </div>
-        <br></br>
+        <br />
       </div>
     </>
   );

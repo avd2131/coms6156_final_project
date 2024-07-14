@@ -1,8 +1,8 @@
 import { playSound } from "./audioPlayer";
-import { getBias } from "./elementUtils";
 import { initializeNavigationListeners, lastFocusedElement, setLastFocusedElement } from "./navigation";
 import { getReadout } from "./textContent";
 import { Settings } from "./types/settings";
+import { getBias } from "./utils/elementUtils";
 
 console.log("%cSpatial Interactions Extension: Content script loaded!", "color: green; font-style: bold");
 
@@ -93,8 +93,6 @@ function highlightChildren(element: HTMLElement, clear: boolean) {
 }
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
-  console.log("We got a message", message);
-
   if (message.type === "popupEvent") {
     switch (message.data) {
       case "outline-elements":

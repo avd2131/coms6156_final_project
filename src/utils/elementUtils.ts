@@ -1,6 +1,6 @@
-import { getReadout } from "./textContent";
-import { Direction } from "./types/direction";
-import { Settings } from "./types/settings";
+import { getReadout } from "../textContent";
+import { Direction } from "../types/direction";
+import { Settings } from "../types/settings";
 
 let detailedLogging = false;
 chrome.storage.sync.get(["detailedLogging"], (items) => {
