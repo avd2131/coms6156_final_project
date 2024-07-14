@@ -1,5 +1,5 @@
-import { Direction } from "./direction";
 import { getReadout } from "./textContent";
+import { Direction } from "./types/direction";
 
 let detailedLogging = false;
 chrome.storage.sync.get(["detailedLogging"], (items) => {

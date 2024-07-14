@@ -79,7 +79,6 @@ const Popup = () => {
     <>
       <h3>Spatial Interactions Extension</h3>
       <div id="settings">
-        <h4>Settings</h4>
         <div id="muteCheckboxWrapper" className="checkbox-wrapper">
           <input
             type="checkbox"
@@ -194,7 +193,7 @@ const Popup = () => {
             });
           }}
         >
-          Toggle element outlines
+          {`${elementsOutlined ? "Disable" : "Enable"} element outlines`}
         </button>
         <div id="detailedLoggingCheckboxWrapper" className="checkbox-wrapper">
           <input

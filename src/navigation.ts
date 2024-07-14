@@ -1,6 +1,7 @@
-import { Direction } from "./direction";
 import { getElementInDirection, getFirstScrollView, scrolledToBottom, scrolledToTop } from "./elementUtils";
 import { verticalScrollStatus } from "./scroll";
+import { Direction } from "./types/direction";
+import { Keys } from "./types/keys";
 
 export let lastFocusedElement: HTMLElement | undefined;
 
@@ -8,9 +9,28 @@ export function setLastFocusedElement(element: HTMLElement) {
   lastFocusedElement = element;
 }
 
+function getDirFromKey(key: string, defaultDirection = Direction.Up): Direction {
+  switch (key.toLowerCase()) {
+    case Keys.ArrowUp:
+    case Keys.W:
+      return Direction.Up;
+    case Keys.ArrowDown:
+    case Keys.S:
+      return Direction.Down;
+    case Keys.ArrowLeft:
+    case Keys.A:
+      return Direction.Left;
+    case Keys.ArrowRight:
+    case Keys.D:
+      return Direction.Right;
+    default:
+      return defaultDirection;
+  }
+}
+
 export function initializeNavigationListeners() {
   document.addEventListener("keydown", async (e) => {
-    navigate(e.key, true);
+    navigate(getDirFromKey(e.key), true);
   });
 }
 
@@ -18,7 +38,7 @@ const scrollPauseInterval = 50;
 
 let attemptingNavigation = false;
 let keyPressDuringNavigation = false;
-async function navigate(key: string, fromKeypress: boolean) {
+async function navigate(direction: Direction, fromKeypress: boolean) {
   let nextEl: HTMLElement | undefined;
 
   if (!lastFocusedElement) return;
@@ -26,8 +46,8 @@ async function navigate(key: string, fromKeypress: boolean) {
   if (!attemptingNavigation) keyPressDuringNavigation = false;
   if (attemptingNavigation && fromKeypress) keyPressDuringNavigation = true;
 
-  switch (key.toLowerCase()) {
-    case "w": // Move up
+  switch (direction) {
+    case Direction.Up: // Move up
       attemptingNavigation = true;
 
       nextEl = getElementInDirection(lastFocusedElement, Direction.Up);
@@ -46,18 +66,18 @@ async function navigate(key: string, fromKeypress: boolean) {
 
           scrollView.scrollBy(0, -300);
 
-          navigate("w", false);
+          navigate(Direction.Up, false);
         } else if (verticalScrollStatus !== "top" && verticalScrollStatus !== "noscroll" && !keyPressDuringNavigation) {
           // Scroll up and try looking for elements again
           await sleep(scrollPauseInterval);
 
           window.scrollBy(0, -300);
 
-          navigate("w", false);
+          navigate(Direction.Up, false);
         } else attemptingNavigation = false;
       }
       break;
-    case "a": // Move left
+    case Direction.Left: // Move left
       attemptingNavigation = true;
 
       nextEl = getElementInDirection(lastFocusedElement, Direction.Left);
@@ -69,7 +89,7 @@ async function navigate(key: string, fromKeypress: boolean) {
 
       attemptingNavigation = false;
       break;
-    case "s": // Move down
+    case Direction.Down: // Move down
       attemptingNavigation = true;
 
       nextEl = getElementInDirection(lastFocusedElement, Direction.Down);
@@ -91,7 +111,7 @@ async function navigate(key: string, fromKeypress: boolean) {
 
           scrollView.scrollBy(0, 300);
 
-          navigate("s", false);
+          navigate(Direction.Down, false);
         } else if (
           verticalScrollStatus !== "bottom" &&
           verticalScrollStatus !== "noscroll" &&
@@ -104,11 +124,11 @@ async function navigate(key: string, fromKeypress: boolean) {
 
           window.scrollBy(0, 300);
 
-          navigate("s", false);
+          navigate(Direction.Down, false);
         } else attemptingNavigation = false;
       }
       break;
-    case "d": // Move right
+    case Direction.Right: // Move right
       attemptingNavigation = true;
 
       nextEl = getElementInDirection(lastFocusedElement, Direction.Right);
