@@ -23,6 +23,10 @@
   outline: none;
 }
 
+.slider-thumb[aria-disabled="true"] {
+  background-color: gray;
+}
+
 .slider-track {
   width: 100%;
   border-radius: 5px;

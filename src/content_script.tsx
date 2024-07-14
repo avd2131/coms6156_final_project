@@ -2,6 +2,7 @@ import { playSound } from "./audioPlayer";
 import { getBias } from "./elementUtils";
 import { initializeNavigationListeners, lastFocusedElement, setLastFocusedElement } from "./navigation";
 import { getReadout } from "./textContent";
+import { Settings } from "./types/settings";
 
 console.log("%cSpatial Interactions Extension: Content script loaded!", "color: green; font-style: bold");
 
@@ -15,7 +16,7 @@ let firstFocus = true;
 document.addEventListener(
   "focusin",
   async () => {
-    const { scrollFeedback, spatializeFeedback, mute } = await getScrollSoundSettings();
+    const { scrollFeedback, spatializeScrollFeedback, mute } = await getScrollSoundSettings();
 
     firstFocus = false;
 
@@ -32,7 +33,7 @@ document.addEventListener(
 
       if (scrollFeedback && !mute)
         await playSound({
-          bias: spatializeFeedback ? { x: getBias(lastFocusedElement!).x, y: -1 } : { x: 0, y: 0 },
+          bias: spatializeScrollFeedback ? { x: getBias(lastFocusedElement!).x, y: -1 } : { x: 0, y: 0 },
           scrollBeep: true,
         });
     }
@@ -57,16 +58,20 @@ document.addEventListener(
   true
 );
 
-function getScrollSoundSettings(): Promise<{ scrollFeedback: boolean; spatializeFeedback: boolean; mute: boolean }> {
+function getScrollSoundSettings(): Promise<{
+  scrollFeedback: boolean;
+  spatializeScrollFeedback: boolean;
+  mute: boolean;
+}> {
   return new Promise((resolve) => {
-    chrome.storage.sync.get(["scrollFeedback", "spatializeFeedback", "mute"], (items) => {
-      resolve(
-        (items as { scrollFeedback: boolean; spatializeFeedback: boolean; mute: boolean }) ?? {
-          scrollFeedback: false,
-          spatializeFeedback: false,
-          mute: false,
-        }
-      );
+    chrome.storage.sync.get(["scrollFeedback", "spatializeScrollFeedback", "mute"], (items) => {
+      const { scrollFeedback, spatializeScrollFeedback, mute } = items as Partial<Settings>;
+
+      resolve({
+        scrollFeedback: scrollFeedback ?? false,
+        spatializeScrollFeedback: spatializeScrollFeedback ?? false,
+        mute: mute ?? false,
+      });
     });
   });
 }

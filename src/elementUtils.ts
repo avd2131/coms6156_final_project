@@ -1,9 +1,10 @@
 import { getReadout } from "./textContent";
 import { Direction } from "./types/direction";
+import { Settings } from "./types/settings";
 
 let detailedLogging = false;
 chrome.storage.sync.get(["detailedLogging"], (items) => {
-  detailedLogging = items.detailedLogging ?? false;
+  detailedLogging = (items as Partial<Settings>).detailedLogging ?? false;
 });
 
 /** Gets the horizontal/vertical bias of an onscreen element. Returns x/y biases bounded by -1 & 1. (0 signifies center of screen) */

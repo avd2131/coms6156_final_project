@@ -1,121 +1,79 @@
 import React, { useEffect, useState } from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import ReactSlider from "react-slider";
 import "./popup.css";
+import { DEFAULT_SETTINGS, Settings } from "./types/settings";
 
 const Popup = () => {
-  const [scrollFeedback, setScrollFeedback] = useState<boolean>(true);
-  const [spatialAudio, setSpatialAudio] = useState<boolean>(true);
-  const [spatializeFeedback, setSpatializeFeedback] = useState<boolean>(true);
-  const [mute, setMute] = useState<boolean>(false);
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const {
+    mute,
+    spatializeAudio,
+    voiceSpeed,
+    scrollFeedback,
+    spatializeScrollFeedback,
+    leftStereoCutoff,
+    rightStereoCutoff,
+    detailedLogging,
+  } = settings;
+
+  const setSetting = (setting: keyof Settings, value: boolean | number) => {
+    setSettings((currentSettings) => ({ ...currentSettings, [setting]: value }));
+  };
+
   const [elementsOutlined, setElementsOutlined] = useState<boolean>(false);
-  const [leftStereoCutoff, setLeftStereoCutoff] = useState<number>(-1);
-  const [rightStereoCutoff, setRightStereoCutoff] = useState<number>(1);
-  const [voiceSpeed, setVoiceSpeed] = useState<number>(175);
-  const [detailedLogging, setDetailedLogging] = useState<boolean>(false);
 
   useEffect(() => {
-    chrome.storage.sync.get(
-      {
-        scrollFeedback: scrollFeedback,
-        spatialAudio: spatialAudio,
-        spatializeFeedback: spatializeFeedback,
-        mute: mute,
-        leftStereoCutoff: leftStereoCutoff,
-        rightStereoCutoff: rightStereoCutoff,
-        voiceSpeed: voiceSpeed,
-        detailedLogging: detailedLogging,
-      },
-      (items) => {
-        setScrollFeedback(items.scrollFeedback);
-        setSpatialAudio(items.spatialAudio);
-        setSpatializeFeedback(items.spatializeFeedback);
-        setMute(items.mute);
-        setLeftStereoCutoff(items.leftStereoCutoff);
-        setRightStereoCutoff(items.rightStereoCutoff);
-        setVoiceSpeed(items.voiceSpeed);
-        setDetailedLogging(items.detailedLogging);
+    chrome.storage.sync.get(settings, (items) => {
+      setSettings(items as Settings);
 
-        console.log("Loaded options:", items);
-      }
-    );
+      console.log("Loaded options:", items);
+    });
   }, []);
 
   const saveOptions = () => {
     // Saves options to chrome.storage.sync.
-    chrome.storage.sync.set(
-      {
-        scrollFeedback: scrollFeedback,
-        spatialAudio: spatialAudio,
-        spatializeFeedback: spatializeFeedback,
-        mute: mute,
-        leftStereoCutoff: leftStereoCutoff,
-        rightStereoCutoff: rightStereoCutoff,
-        voiceSpeed: voiceSpeed,
-        detailedLogging: detailedLogging,
-      },
-      () => {
-        console.log("Options saved");
-      }
-    );
+    chrome.storage.sync.set(settings, () => {
+      console.log("Options saved");
+    });
 
     self.close();
-
-    chrome.tabs.reload();
   };
 
-  function resetToDefault() {
-    setScrollFeedback(true);
-    setSpatialAudio(true);
-    setSpatializeFeedback(true);
-    setMute(false);
-    setElementsOutlined(false);
-    setLeftStereoCutoff(-1);
-    setRightStereoCutoff(1);
-    setVoiceSpeed(175);
-  }
+  const resetSettings = () => setSettings(DEFAULT_SETTINGS);
 
   return (
     <>
       <h3>Spatial Interactions Extension</h3>
       <div id="settings">
         <div id="muteCheckboxWrapper" className="checkbox-wrapper">
-          <input
-            type="checkbox"
-            checked={mute}
-            onChange={() => {
-              setMute(!mute);
-            }}
-          />
+          <input type="checkbox" checked={mute} onChange={() => setSetting("mute", !mute)} />
           <p>Mute</p>
         </div>
         <div id="spatialAudioCheckboxWrapper" className="checkbox-wrapper">
           <input
             type="checkbox"
-            checked={spatialAudio}
-            onChange={() => {
-              setSpatialAudio(!spatialAudio);
-            }}
+            checked={spatializeAudio}
+            disabled={mute}
+            onChange={() => setSetting("spatializeAudio", !spatializeAudio)}
           />
-          <p>Spatialize Audio</p>
+          <p>Spatialize audio</p>
         </div>
         <div id="scrollFeedbackCheckboxWrapper" className="checkbox-wrapper">
           <input
             type="checkbox"
             checked={scrollFeedback}
-            onChange={() => {
-              setScrollFeedback(!scrollFeedback);
-            }}
+            disabled={mute}
+            onChange={() => setSetting("scrollFeedback", !scrollFeedback)}
           />
           <p>Scroll feedback</p>
         </div>
-        <div id="spatializeFeedbackCheckboxWrapper" className="checkbox-wrapper">
+        <div id="spatializeScrollFeedbackCheckboxWrapper" className="checkbox-wrapper">
           <input
             type="checkbox"
-            checked={spatializeFeedback}
-            onChange={() => {
-              setSpatializeFeedback(!spatializeFeedback);
-            }}
+            checked={spatializeScrollFeedback}
+            disabled={!scrollFeedback || mute}
+            onChange={() => setSetting("spatializeScrollFeedback", !spatializeScrollFeedback)}
           />
           <p>Spatialize</p>
         </div>
@@ -124,6 +82,7 @@ const Popup = () => {
           <div className="slideContainer">
             <p>Left</p>
             <ReactSlider
+              disabled={mute || !spatializeAudio}
               className="horizontal-slider"
               thumbClassName="slider-thumb"
               trackClassName="slider-track"
@@ -131,9 +90,7 @@ const Popup = () => {
               ariaLabel={"Thumb"}
               ariaValuetext={(state) => `Thumb value ${(state.valueNow - 100) / 100}`}
               renderThumb={(props, state) => <div {...props}>{(state.valueNow - 100) / 100}</div>}
-              onAfterChange={(value) => {
-                setLeftStereoCutoff(-(1 - value / 100));
-              }}
+              onAfterChange={(value) => setSetting("leftStereoCutoff", -(1 - value / 100))}
               step={5}
               pearling
               minDistance={0}
@@ -142,6 +99,7 @@ const Popup = () => {
           <div className="slideContainer">
             <p>Right</p>
             <ReactSlider
+              disabled={mute || !spatializeAudio}
               className="horizontal-slider"
               thumbClassName="slider-thumb"
               trackClassName="slider-track"
@@ -149,9 +107,7 @@ const Popup = () => {
               ariaLabel={"Thumb"}
               ariaValuetext={(state) => `Thumb value ${state.valueNow / 100}`}
               renderThumb={(props, state) => <div {...props}>{state.valueNow / 100}</div>}
-              onAfterChange={(value) => {
-                setRightStereoCutoff(value / 100);
-              }}
+              onAfterChange={(value) => setSetting("rightStereoCutoff", value / 100)}
               step={5}
               pearling
               minDistance={0}
@@ -161,6 +117,7 @@ const Popup = () => {
         <div className="slideContainer">
           <p>Voice Speed</p>
           <ReactSlider
+            disabled={mute || !spatializeAudio}
             className="horizontal-slider"
             thumbClassName="slider-thumb"
             trackClassName="slider-track"
@@ -170,9 +127,7 @@ const Popup = () => {
             ariaLabel={"Thumb"}
             ariaValuetext={(state) => `Thumb value ${state.valueNow}`}
             renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
-            onAfterChange={(value) => {
-              setVoiceSpeed(value);
-            }}
+            onAfterChange={(value) => setSetting("voiceSpeed", value)}
             step={5}
             pearling
             minDistance={0}
@@ -200,14 +155,14 @@ const Popup = () => {
             type="checkbox"
             checked={detailedLogging}
             onChange={() => {
-              setDetailedLogging(!detailedLogging);
+              setSetting("detailedLogging", !detailedLogging);
             }}
           />
           <p>Detailed navigation logging</p>
         </div>
         <div style={{ marginTop: "10px", display: "flex", gap: "10px", justifyContent: "center" }}>
           <button onClick={() => saveOptions()}>Save</button>
-          <button onClick={resetToDefault}>Reset to Default</button>
+          <button onClick={resetSettings}>Reset to Default</button>
         </div>
         <br></br>
       </div>
@@ -215,9 +170,10 @@ const Popup = () => {
   );
 };
 
-ReactDOM.render(
+const container = document.getElementById("root");
+const root = createRoot(container!);
+root.render(
   <React.StrictMode>
     <Popup />
-  </React.StrictMode>,
-  document.getElementById("root")
+  </React.StrictMode>
 );

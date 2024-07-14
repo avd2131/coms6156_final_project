@@ -1,4 +1,5 @@
 import { getArrayBuffer } from "./fileUtils";
+import { Settings } from "./types/settings";
 
 let audioCtx: AudioContext | undefined;
 let panner: PannerNode | undefined;
@@ -43,12 +44,14 @@ let rightStereoCutoff = 1;
 
 let voiceSpeed = 175;
 
-let spatialAudioEnabled = true;
-chrome.storage.sync.get(["spatialAudio", "leftStereoCutoff", "rightStereoCutoff", "voiceSpeed"], (items) => {
-  spatialAudioEnabled = items.spatialAudio ?? true;
-  leftStereoCutoff = items.leftStereoCutoff ?? -1;
-  rightStereoCutoff = items.rightStereoCutoff ?? 1;
-  voiceSpeed = items.voiceSpeed ?? 175;
+let spatializeAudio = true;
+chrome.storage.sync.get(["spatializeAudio", "leftStereoCutoff", "rightStereoCutoff", "voiceSpeed"], (items) => {
+  const loadedSettings = items as Partial<Settings>;
+
+  spatializeAudio = loadedSettings.spatializeAudio ?? true;
+  leftStereoCutoff = loadedSettings.leftStereoCutoff ?? -1;
+  rightStereoCutoff = loadedSettings.rightStereoCutoff ?? 1;
+  voiceSpeed = loadedSettings.voiceSpeed ?? 175;
 });
 
 interface PlaySoundProps {
@@ -61,7 +64,7 @@ export async function playSound({ bias, text, scrollBeep = false }: PlaySoundPro
   if (text === "") return;
 
   return new Promise(async (resolve, reject) => {
-    if (!spatialAudioEnabled) bias = { x: 0, y: 0 };
+    if (!spatializeAudio) bias = { x: 0, y: 0 };
 
     if (!audioCtx) {
       audioCtx = new AudioContext();
