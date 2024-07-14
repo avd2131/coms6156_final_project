@@ -7,6 +7,7 @@ import { DEFAULT_SETTINGS, Settings } from "./types/settings";
 const Popup = () => {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const {
+    extensionEnabled,
     mute,
     spatializeAudio,
     voiceSpeed,
@@ -26,53 +27,65 @@ const Popup = () => {
   useEffect(() => {
     chrome.storage.sync.get(settings, (items) => {
       setSettings(items as Settings);
-
-      console.log("Loaded options:", items);
     });
   }, []);
 
-  const saveOptions = () => {
-    // Saves options to chrome.storage.sync.
-    chrome.storage.sync.set(settings, () => {
-      console.log("Options saved");
-    });
+  const saveSettings = async (settingsOverride?: Settings) => {
+    await chrome.storage.sync.set(settingsOverride ?? settings);
+    console.log("Settings saved");
 
     self.close();
   };
 
   const resetSettings = () => setSettings(DEFAULT_SETTINGS);
 
+  const settingDisabled = !extensionEnabled;
+  const soundSettingDisabled = mute || settingDisabled;
+
   return (
     <>
-      <h3>Spatial Interactions Extension</h3>
+      <h3 id="title">Spatial Interactions Extension</h3>
       <div id="settings">
-        <div id="muteCheckboxWrapper" className="checkbox-wrapper">
-          <input type="checkbox" checked={mute} onChange={() => setSetting("mute", !mute)} />
+        <div className="checkbox-wrapper">
+          <input
+            type="checkbox"
+            checked={extensionEnabled}
+            onChange={async (e) => {
+              await saveSettings({ ...settings, extensionEnabled: e.target.checked });
+
+              chrome.tabs.reload();
+            }}
+          />
+          <p>Enable screen reader</p>
+        </div>
+        <h3>Settings</h3>
+        <div className="checkbox-wrapper">
+          <input type="checkbox" checked={mute} disabled={settingDisabled} onChange={() => setSetting("mute", !mute)} />
           <p>Mute</p>
         </div>
-        <div id="spatialAudioCheckboxWrapper" className="checkbox-wrapper">
+        <div className="checkbox-wrapper">
           <input
             type="checkbox"
             checked={spatializeAudio}
-            disabled={mute}
+            disabled={soundSettingDisabled}
             onChange={() => setSetting("spatializeAudio", !spatializeAudio)}
           />
           <p>Spatialize audio</p>
         </div>
-        <div id="scrollFeedbackCheckboxWrapper" className="checkbox-wrapper">
+        <div className="checkbox-wrapper">
           <input
             type="checkbox"
             checked={scrollFeedback}
-            disabled={mute}
+            disabled={soundSettingDisabled}
             onChange={() => setSetting("scrollFeedback", !scrollFeedback)}
           />
           <p>Scroll feedback</p>
         </div>
-        <div id="spatializeScrollFeedbackCheckboxWrapper" className="checkbox-wrapper">
+        <div className="checkbox-wrapper indented">
           <input
             type="checkbox"
             checked={spatializeScrollFeedback}
-            disabled={!scrollFeedback || mute}
+            disabled={!scrollFeedback || soundSettingDisabled}
             onChange={() => setSetting("spatializeScrollFeedback", !spatializeScrollFeedback)}
           />
           <p>Spatialize</p>
@@ -82,7 +95,7 @@ const Popup = () => {
           <div className="slideContainer">
             <p>Left</p>
             <ReactSlider
-              disabled={mute || !spatializeAudio}
+              disabled={soundSettingDisabled || !spatializeAudio}
               className="horizontal-slider"
               thumbClassName="slider-thumb"
               trackClassName="slider-track"
@@ -99,7 +112,7 @@ const Popup = () => {
           <div className="slideContainer">
             <p>Right</p>
             <ReactSlider
-              disabled={mute || !spatializeAudio}
+              disabled={soundSettingDisabled || !spatializeAudio}
               className="horizontal-slider"
               thumbClassName="slider-thumb"
               trackClassName="slider-track"
@@ -117,7 +130,7 @@ const Popup = () => {
         <div className="slideContainer">
           <p>Voice Speed</p>
           <ReactSlider
-            disabled={mute || !spatializeAudio}
+            disabled={soundSettingDisabled || !spatializeAudio}
             className="horizontal-slider"
             thumbClassName="slider-thumb"
             trackClassName="slider-track"
@@ -150,7 +163,7 @@ const Popup = () => {
         >
           {`${elementsOutlined ? "Disable" : "Enable"} element outlines`}
         </button>
-        <div id="detailedLoggingCheckboxWrapper" className="checkbox-wrapper">
+        <div className="checkbox-wrapper">
           <input
             type="checkbox"
             checked={detailedLogging}
@@ -161,7 +174,7 @@ const Popup = () => {
           <p>Detailed navigation logging</p>
         </div>
         <div style={{ marginTop: "10px", display: "flex", gap: "10px", justifyContent: "center" }}>
-          <button onClick={() => saveOptions()}>Save</button>
+          <button onClick={() => saveSettings()}>Save</button>
           <button onClick={resetSettings}>Reset to Default</button>
         </div>
         <br />

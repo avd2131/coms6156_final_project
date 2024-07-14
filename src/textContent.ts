@@ -1,5 +1,5 @@
-import { hasNonTextChildren } from "./utils/elementUtils";
-import { isNumeric } from "./utils/stringUtils";
+import { hasNonTextChildren } from "./utils/element.utils";
+import { isNumeric } from "./utils/string.utils";
 
 const logElementDetails = false;
 

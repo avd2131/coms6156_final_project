@@ -1,8 +1,8 @@
 import { verticalScrollStatus } from "./scroll";
 import { Direction } from "./types/direction";
 import { Keys, NavigationType } from "./types/keys";
-import { getElementInDirection, getFirstScrollView, scrolledToBottom, scrolledToTop } from "./utils/elementUtils";
-import { isKeyInProfile } from "./utils/keyUtils";
+import { getElementInDirection, getFirstScrollView, scrolledToBottom, scrolledToTop } from "./utils/element.utils";
+import { isKeyInProfile } from "./utils/navigationKeys.utils";
 
 export let lastFocusedElement: HTMLElement | undefined;
 
@@ -36,7 +36,7 @@ function getDirFromKey(key: string): Direction {
 }
 
 export function initializeNavigationListeners() {
-  document.addEventListener("keydown", async (e) => {
+  document.addEventListener("keydown", (e) => {
     navigate(getDirFromKey(e.key), e);
   });
 }

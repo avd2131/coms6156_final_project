@@ -1,4 +1,5 @@
 export interface Settings extends ScrollSettings, StereoPanningSettings, DeveloperSettings {
+  extensionEnabled: boolean;
   mute: boolean;
   spatializeAudio: boolean;
   voiceSpeed: number;
@@ -19,6 +20,7 @@ export interface DeveloperSettings {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
+  extensionEnabled: true,
   scrollFeedback: true,
   spatializeAudio: true,
   spatializeScrollFeedback: true,

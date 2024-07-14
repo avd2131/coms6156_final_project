@@ -1,6 +1,6 @@
 import { Keys } from "./types/keys";
 import { Settings } from "./types/settings";
-import { getArrayBuffer } from "./utils/fileUtils";
+import { getArrayBuffer } from "./utils/file.utils";
 
 let audioCtx: AudioContext | undefined;
 let panner: PannerNode | undefined;
