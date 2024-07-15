@@ -18,6 +18,8 @@ const Popup = () => {
     detailedLogging,
   } = settings;
 
+  const [uid, setUid] = useState<string | undefined>(undefined);
+
   const setSetting = (setting: keyof Settings, value: boolean | number) => {
     setSettings((currentSettings) => ({ ...currentSettings, [setting]: value }));
   };
@@ -25,9 +27,8 @@ const Popup = () => {
   const [elementsOutlined, setElementsOutlined] = useState<boolean>(false);
 
   useEffect(() => {
-    chrome.storage.sync.get(settings, (items) => {
-      setSettings(items as Settings);
-    });
+    chrome.storage.sync.get(settings, (items) => setSettings(items as Settings));
+    chrome.storage.sync.get(["uid"], (items) => setUid(items.uid));
   }, []);
 
   const saveSettings = async (settingsOverride?: Settings) => {
@@ -44,7 +45,8 @@ const Popup = () => {
 
   return (
     <>
-      <h3 id="title">Spatial Interactions Extension</h3>
+      <h3>Spatial Interactions Extension</h3>
+      <p id="username">Username: {uid}</p>
       <div id="settings">
         <div className="checkbox-wrapper">
           <input

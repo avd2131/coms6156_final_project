@@ -1,3 +1,4 @@
+import Haikunator from "haikunator";
 import { playSound } from "./audioPlayer";
 import { initializeNavigationListeners, lastFocusedElement, setLastFocusedElement } from "./navigation";
 import { getReadout } from "./textContent";
@@ -8,6 +9,15 @@ import { isExtensionEnabled } from "./utils/settings.utils";
 console.log("%cSpatial Interactions Extension: Content script loaded!", "color: green; font-style: bold");
 
 const initialize = async () => {
+  // Make sure the user has an identifiable username
+  let { uid } = await chrome.storage.sync.get(["uid"]);
+  if (uid === undefined) {
+    const haikuinator = new Haikunator();
+    uid = haikuinator.haikunate();
+
+    await chrome.storage.sync.set({ uid });
+  }
+
   // Set up 'WASD' navigation
   const extensionEnabled = await isExtensionEnabled();
   if (!extensionEnabled) return;
