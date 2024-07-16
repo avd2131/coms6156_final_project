@@ -2,6 +2,7 @@ import { verticalScrollStatus } from "./scroll";
 import { Direction } from "./types/direction";
 import { Keys, NavigationType } from "./types/keys";
 import { getElementInDirection, getFirstScrollView, scrolledToBottom, scrolledToTop } from "./utils/element.utils";
+import { Logger } from "./utils/logging.utils";
 import { isKeyInProfile } from "./utils/navigationKeys.utils";
 
 export let lastFocusedElement: HTMLElement | undefined;
@@ -35,9 +36,9 @@ function getDirFromKey(key: string): Direction {
   }
 }
 
-export function initializeNavigationListeners() {
+export function initializeNavigationListeners(logger?: Logger) {
   document.addEventListener("keydown", (e) => {
-    navigate(getDirFromKey(e.key), e);
+    navigate(getDirFromKey(e.key), logger, e);
   });
 }
 
@@ -45,7 +46,7 @@ const scrollPauseInterval = 50;
 
 let attemptingNavigation = false;
 let keyPressDuringNavigation = false;
-async function navigate(direction: Direction, keyboardEvent?: KeyboardEvent) {
+async function navigate(direction: Direction, logger?: Logger, keyboardEvent?: KeyboardEvent) {
   let nextEl: HTMLElement | undefined;
 
   if (direction === Direction.None) return;
@@ -71,6 +72,8 @@ async function navigate(direction: Direction, keyboardEvent?: KeyboardEvent) {
         // Element found
         nextEl.focus();
 
+        if (fromKeypress) logger?.logKeypress(keyboardEvent.key, direction, lastFocusedElement.tagName, nextEl.tagName);
+
         attemptingNavigation = false;
       } else {
         // No element found
@@ -81,15 +84,19 @@ async function navigate(direction: Direction, keyboardEvent?: KeyboardEvent) {
 
           scrollView.scrollBy(0, -300);
 
-          navigate(Direction.Up);
+          navigate(Direction.Up, logger);
         } else if (verticalScrollStatus !== "top" && verticalScrollStatus !== "noscroll" && !keyPressDuringNavigation) {
           // Scroll up and try looking for elements again
           await sleep(scrollPauseInterval);
 
           window.scrollBy(0, -300);
 
-          navigate(Direction.Up);
-        } else attemptingNavigation = false;
+          navigate(Direction.Up, logger);
+        } else {
+          if (fromKeypress) logger?.logKeypress(keyboardEvent.key, direction);
+
+          attemptingNavigation = false;
+        }
       }
       break;
     case Direction.Left: // Move left
@@ -100,6 +107,10 @@ async function navigate(direction: Direction, keyboardEvent?: KeyboardEvent) {
       if (nextEl) {
         // Element found
         nextEl.focus();
+
+        if (fromKeypress) logger?.logKeypress(keyboardEvent.key, direction, lastFocusedElement.tagName, nextEl.tagName);
+      } else {
+        if (fromKeypress) logger?.logKeypress(keyboardEvent.key, direction);
       }
 
       attemptingNavigation = false;
@@ -115,6 +126,8 @@ async function navigate(direction: Direction, keyboardEvent?: KeyboardEvent) {
         // Element found
         nextEl.focus();
 
+        if (fromKeypress) logger?.logKeypress(keyboardEvent.key, direction, lastFocusedElement.tagName, nextEl.tagName);
+
         attemptingNavigation = false;
       } else {
         // No element found
@@ -126,7 +139,7 @@ async function navigate(direction: Direction, keyboardEvent?: KeyboardEvent) {
 
           scrollView.scrollBy(0, 300);
 
-          navigate(Direction.Down);
+          navigate(Direction.Down, logger);
         } else if (
           verticalScrollStatus !== "bottom" &&
           verticalScrollStatus !== "noscroll" &&
@@ -139,8 +152,12 @@ async function navigate(direction: Direction, keyboardEvent?: KeyboardEvent) {
 
           window.scrollBy(0, 300);
 
-          navigate(Direction.Down);
-        } else attemptingNavigation = false;
+          navigate(Direction.Down, logger);
+        } else {
+          if (fromKeypress) logger?.logKeypress(keyboardEvent.key, direction);
+
+          attemptingNavigation = false;
+        }
       }
       break;
     case Direction.Right: // Move right
@@ -151,10 +168,13 @@ async function navigate(direction: Direction, keyboardEvent?: KeyboardEvent) {
       if (nextEl) {
         // Element found
         nextEl.focus();
+
+        if (fromKeypress) logger?.logKeypress(keyboardEvent.key, direction, lastFocusedElement.tagName, nextEl.tagName);
+      } else {
+        if (fromKeypress) logger?.logKeypress(keyboardEvent.key, direction);
       }
 
       attemptingNavigation = false;
-
       break;
   }
 }

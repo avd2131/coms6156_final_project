@@ -17,6 +17,7 @@ export interface StereoPanningSettings {
 
 export interface DeveloperSettings {
   detailedLogging: boolean;
+  enableCloudWatch: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -29,4 +30,5 @@ export const DEFAULT_SETTINGS: Settings = {
   rightStereoCutoff: 1,
   voiceSpeed: 175,
   detailedLogging: false,
+  enableCloudWatch: true,
 };

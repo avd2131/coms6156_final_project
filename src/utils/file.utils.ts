@@ -5,8 +5,6 @@ export async function getArrayBuffer(url: string) {
   // Gets the path to the file given its root path (special for Chrome extensions)
   const storedFileURL = chrome.runtime.getURL(`assets/${filename}`);
 
-  console.log("stored file URL:", storedFileURL);
-
   let response = await fetch(storedFileURL);
   const dataBlob = await response.blob();
 

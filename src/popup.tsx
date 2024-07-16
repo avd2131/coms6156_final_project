@@ -16,6 +16,7 @@ const Popup = () => {
     leftStereoCutoff,
     rightStereoCutoff,
     detailedLogging,
+    enableCloudWatch,
   } = settings;
 
   const [uid, setUid] = useState<string | undefined>(undefined);
@@ -53,6 +54,7 @@ const Popup = () => {
             type="checkbox"
             checked={extensionEnabled}
             onChange={async (e) => {
+              // Requires page reload, since content script only checks this setting on initial load
               await saveSettings({ ...settings, extensionEnabled: e.target.checked });
 
               chrome.tabs.reload();
@@ -168,6 +170,7 @@ const Popup = () => {
         <div className="checkbox-wrapper">
           <input
             type="checkbox"
+            disabled={settingDisabled}
             checked={detailedLogging}
             onChange={() => {
               setSetting("detailedLogging", !detailedLogging);
@@ -175,11 +178,24 @@ const Popup = () => {
           />
           <p>Detailed navigation logging</p>
         </div>
+        <div className="checkbox-wrapper">
+          <input
+            type="checkbox"
+            disabled={settingDisabled}
+            checked={enableCloudWatch}
+            onChange={async (e) => {
+              // Requires page reload, since content script only checks this setting on initial load
+              await saveSettings({ ...settings, enableCloudWatch: e.target.checked });
+
+              chrome.tabs.reload();
+            }}
+          />
+          <p>Log activity on AWS CloudWatch</p>
+        </div>
         <div style={{ marginTop: "10px", display: "flex", gap: "10px", justifyContent: "center" }}>
           <button onClick={() => saveSettings()}>Save</button>
           <button onClick={resetSettings}>Reset to Default</button>
         </div>
-        <br />
       </div>
     </>
   );

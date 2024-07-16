@@ -2,8 +2,10 @@ import Haikunator from "haikunator";
 import { playSound } from "./audioPlayer";
 import { initializeNavigationListeners, lastFocusedElement, setLastFocusedElement } from "./navigation";
 import { getReadout } from "./textContent";
+import { Direction } from "./types/direction";
 import { ScrollSettings, Settings } from "./types/settings";
 import { getBias } from "./utils/element.utils";
+import { Logger } from "./utils/logging.utils";
 import { isExtensionEnabled } from "./utils/settings.utils";
 
 console.log("%cSpatial Interactions Extension: Content script loaded!", "color: green; font-style: bold");
@@ -18,19 +20,26 @@ const initialize = async () => {
     await chrome.storage.sync.set({ uid });
   }
 
+  let logger: Logger | undefined;
+
+  const { enableCloudWatch } = await chrome.storage.sync.get(["enableCloudWatch"]);
+  if (enableCloudWatch) {
+    logger = new Logger(uid);
+  }
+
   // Set up 'WASD' navigation
   const extensionEnabled = await isExtensionEnabled();
   if (!extensionEnabled) return;
 
-  initializeNavigationListeners();
-  initializeFocusHandlers();
+  initializeNavigationListeners(logger);
+  initializeFocusHandlers(logger);
 };
 
 // Detects which element is currently being focused on and gives it a border
 let lastScrollYPos = window.scrollY;
 let styledElements: HTMLElement[] = [];
 let firstFocus = true;
-const initializeFocusHandlers = () => {
+const initializeFocusHandlers = (logger?: Logger) => {
   document.addEventListener(
     "focusin",
     async () => {
@@ -48,6 +57,8 @@ const initializeFocusHandlers = () => {
 
       if (window.scrollY != lastScrollYPos && !firstFocus) {
         lastScrollYPos = window.scrollY;
+
+        logger?.logScrollEvent(activeElement.tagName, window.scrollY > lastScrollYPos ? Direction.Down : Direction.Up);
 
         if (scrollFeedback && !mute)
           await playSound({

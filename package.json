@@ -18,6 +18,7 @@
 		"url": "https://github.com/ColumbiaCEAL/spatial-interactions-extension.git"
 	},
 	"dependencies": {
+		"@aws-sdk/client-cloudwatch-logs": "^3.614.0",
 		"@babel/runtime": "^7.24.8",
 		"haikunator": "^2.1.2",
 		"mespeak": "^2.0.2",
