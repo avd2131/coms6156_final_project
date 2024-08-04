@@ -3,8 +3,10 @@ import { playSound } from "./audioPlayer";
 import { initializeNavigationListeners, lastFocusedElement, setLastFocusedElement } from "./navigation";
 import { getReadout } from "./textContent";
 import { Direction } from "./types/direction";
+import { EventType, PopupEventType } from "./types/events";
 import { ScrollSettings, Settings } from "./types/settings";
 import { getBias } from "./utils/element.utils";
+import { onEventListenerStatusChange } from "./utils/eventHandling.utils";
 import { Logger } from "./utils/logging.utils";
 import { isExtensionEnabled } from "./utils/settings.utils";
 
@@ -39,53 +41,72 @@ const initialize = async () => {
 let lastScrollYPos = window.scrollY;
 let styledElements: HTMLElement[] = [];
 let firstFocus = true;
+
+const focusCallbacks: {
+  focusIn?: (this: Document, ev: FocusEvent) => any;
+  focusOut?: (this: Document, ev: FocusEvent) => any;
+} = {};
+
 const initializeFocusHandlers = (logger?: Logger) => {
-  document.addEventListener(
-    "focusin",
-    async () => {
-      const { scrollFeedback, spatializeScrollFeedback, mute } = await getScrollSoundSettings();
+  // Clear out existing handlers if they already exist
+  clearFocusHandlers();
 
-      firstFocus = false;
+  const focusInListenerCallback = async () => {
+    const { scrollFeedback, spatializeScrollFeedback, mute } = await getScrollSoundSettings();
 
-      const activeElement = document.activeElement as HTMLElement;
-      setLastFocusedElement(activeElement);
+    firstFocus = false;
 
-      styledElements.push(activeElement);
+    const activeElement = document.activeElement as HTMLElement;
+    setLastFocusedElement(activeElement);
 
-      activeElement.style.outline = "2px #00d0ff dashed";
-      activeElement.style.outlineOffset = "-1px";
+    styledElements.push(activeElement);
 
-      if (window.scrollY != lastScrollYPos && !firstFocus) {
-        lastScrollYPos = window.scrollY;
+    activeElement.style.outline = "2px #00d0ff dashed";
+    activeElement.style.outlineOffset = "-1px";
 
-        logger?.logScrollEvent(activeElement.tagName, window.scrollY > lastScrollYPos ? Direction.Down : Direction.Up);
+    if (window.scrollY != lastScrollYPos && !firstFocus) {
+      lastScrollYPos = window.scrollY;
 
-        if (scrollFeedback && !mute)
-          await playSound({
-            bias: spatializeScrollFeedback ? { x: getBias(lastFocusedElement!).x, y: -1 } : { x: 0, y: 0 },
-            scrollBeep: true,
-          });
+      logger?.logScrollEvent(activeElement.tagName, window.scrollY > lastScrollYPos ? Direction.Down : Direction.Up);
+
+      if (scrollFeedback && !mute)
+        await playSound({
+          bias: spatializeScrollFeedback ? { x: getBias(lastFocusedElement!).x, y: -1 } : { x: 0, y: 0 },
+          scrollBeep: true,
+        });
+    }
+
+    if (!mute) playSound({ bias: getBias(activeElement), text: getReadout(activeElement) });
+  };
+
+  const focusOutListenerCallback = () => {
+    styledElements.forEach((el) => {
+      if (el != document.activeElement) {
+        el.style.outline = "";
+        el.removeAttribute("outlineOffset");
       }
+    });
 
-      if (!mute) playSound({ bias: getBias(activeElement), text: getReadout(activeElement) });
-    },
-    true
-  );
+    styledElements.splice(0, styledElements.length);
+  };
 
-  document.addEventListener(
-    "focusout",
-    () => {
-      styledElements.forEach((el) => {
-        if (el != document.activeElement) {
-          el.style.outline = "";
-          el.removeAttribute("outlineOffset");
-        }
-      });
+  focusCallbacks.focusIn = focusInListenerCallback;
+  focusCallbacks.focusOut = focusOutListenerCallback;
 
-      styledElements.splice(0, styledElements.length);
-    },
-    true
-  );
+  document.addEventListener("focusin", focusInListenerCallback, true);
+  document.addEventListener("focusout", focusOutListenerCallback, true);
+};
+
+const clearFocusHandlers = () => {
+  if (focusCallbacks.focusIn) {
+    document.removeEventListener("focusin", focusCallbacks.focusIn, true);
+    focusCallbacks.focusIn = undefined;
+  }
+
+  if (focusCallbacks.focusOut) {
+    document.removeEventListener("focusout", focusCallbacks.focusOut, true);
+    focusCallbacks.focusOut = undefined;
+  }
 };
 
 async function getScrollSoundSettings(): Promise<Pick<Settings, "mute"> & ScrollSettings> {
@@ -116,15 +137,21 @@ function highlightChildren(element: HTMLElement, clear: boolean) {
 }
 
 chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
-  if (message.type === "popupEvent") {
+  if (message.type === EventType.Popup) {
     switch (message.data) {
-      case "outline-elements":
+      case PopupEventType.EnableEventListeners:
+        chrome.runtime.sendMessage({ type: EventType.EventListeners, data: "enable" });
+        break;
+      case PopupEventType.DisableEventListeners:
+        chrome.runtime.sendMessage({ type: EventType.EventListeners, data: "disable" });
+        break;
+      case PopupEventType.OutlineElements:
         if (!allElementsHighlighted) {
           highlightChildren(document.documentElement, false);
           allElementsHighlighted = true;
         }
         break;
-      case "clear-outlines":
+      case PopupEventType.ClearOutlines:
         if (allElementsHighlighted) {
           highlightChildren(document.documentElement, true);
           allElementsHighlighted = false;
@@ -137,5 +164,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     }
   }
 });
+
+onEventListenerStatusChange({ onEnable: initializeFocusHandlers, onDisable: clearFocusHandlers });
 
 initialize();

@@ -2,7 +2,11 @@ import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import ReactSlider from "react-slider";
 import "./popup.css";
+import { EventListenersEventType, EventType, PopupEventType } from "./types/events";
 import { DEFAULT_SETTINGS, Settings } from "./types/settings";
+import { areSettingsEqual } from "./utils/settings.utils";
+
+let lastSavedSettings: Settings = DEFAULT_SETTINGS;
 
 const Popup = () => {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
@@ -28,15 +32,21 @@ const Popup = () => {
   const [elementsOutlined, setElementsOutlined] = useState<boolean>(false);
 
   useEffect(() => {
-    chrome.storage.sync.get(settings, (items) => setSettings(items as Settings));
+    chrome.storage.sync.get(settings, (items) => {
+      setSettings(items as Settings);
+      lastSavedSettings = items as Settings;
+    });
     chrome.storage.sync.get(["uid"], (items) => setUid(items.uid));
   }, []);
 
   const saveSettings = async (settingsOverride?: Settings) => {
-    await chrome.storage.sync.set(settingsOverride ?? settings);
-    console.log("Settings saved");
+    const settingsToSave = settingsOverride ?? settings;
 
-    self.close();
+    await chrome.storage.sync.set(settingsToSave);
+    setSettings(settingsToSave);
+    lastSavedSettings = settingsToSave;
+
+    console.log("Settings saved");
   };
 
   const resetSettings = () => setSettings(DEFAULT_SETTINGS);
@@ -57,7 +67,15 @@ const Popup = () => {
               // Requires page reload, since content script only checks this setting on initial load
               await saveSettings({ ...settings, extensionEnabled: e.target.checked });
 
-              chrome.tabs.reload();
+              chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                if (tabs[0].id)
+                  chrome.tabs.sendMessage(tabs[0].id, {
+                    type: EventType.EventListeners,
+                    data: e.target.checked
+                      ? EventListenersEventType.EnableListeners
+                      : EventListenersEventType.DisableListeners,
+                  });
+              });
             }}
           />
           <p>Enable screen reader</p>
@@ -159,8 +177,8 @@ const Popup = () => {
             chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
               if (tabs[0].id)
                 chrome.tabs.sendMessage(tabs[0].id, {
-                  type: "popupEvent",
-                  data: elementsOutlined ? "clear-outlines" : "outline-elements",
+                  type: EventType.Popup,
+                  data: elementsOutlined ? PopupEventType.ClearOutlines : PopupEventType.OutlineElements,
                 });
             });
           }}
@@ -193,7 +211,9 @@ const Popup = () => {
           <p>Log activity on AWS CloudWatch</p>
         </div>
         <div style={{ marginTop: "10px", display: "flex", gap: "10px", justifyContent: "center" }}>
-          <button onClick={() => saveSettings()}>Save</button>
+          <button onClick={() => saveSettings()} disabled={areSettingsEqual(settings, lastSavedSettings)}>
+            Save
+          </button>
           <button onClick={resetSettings}>Reset to Default</button>
         </div>
       </div>

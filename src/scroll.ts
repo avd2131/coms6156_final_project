@@ -1,3 +1,5 @@
+import { onEventListenerStatusChange } from "./utils/eventHandling.utils";
+
 export let verticalScrollStatus = "top";
 
 function updateScrollStatus() {
@@ -11,13 +13,16 @@ function updateScrollStatus() {
   if (window.innerHeight === document.body.scrollHeight) verticalScrollStatus = "noscroll";
 }
 
-updateScrollStatus();
-
 // Detects if at the top/bottom of screen when scrolling
-document.addEventListener("scroll", (e) => {
-  updateScrollStatus();
-});
+const initializeScrollListeners = () => {
+  document.addEventListener("scroll", updateScrollStatus);
+  window.addEventListener("resize", updateScrollStatus);
+};
 
-window.addEventListener("resize", () => {
-  updateScrollStatus();
-});
+const clearScrollListeners = () => {
+  document.removeEventListener("scroll", updateScrollStatus);
+  window.removeEventListener("resize", updateScrollStatus);
+};
+
+updateScrollStatus();
+onEventListenerStatusChange({ onEnable: initializeScrollListeners, onDisable: clearScrollListeners });

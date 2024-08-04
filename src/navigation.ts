@@ -2,6 +2,7 @@ import { verticalScrollStatus } from "./scroll";
 import { Direction } from "./types/direction";
 import { Keys, NavigationType } from "./types/keys";
 import { getElementInDirection, getFirstScrollView, scrolledToBottom, scrolledToTop } from "./utils/element.utils";
+import { onEventListenerStatusChange } from "./utils/eventHandling.utils";
 import { Logger } from "./utils/logging.utils";
 import { isKeyInProfile } from "./utils/navigationKeys.utils";
 
@@ -36,17 +37,24 @@ function getDirFromKey(key: string): Direction {
   }
 }
 
-export function initializeNavigationListeners(logger?: Logger) {
-  document.addEventListener("keydown", (e) => {
-    navigate(getDirFromKey(e.key), logger, e);
-  });
+const navigateOnKeydownCallback = (e: KeyboardEvent) => {
+  navigate(getDirFromKey(e.key), e);
+};
+
+let logger: Logger | undefined;
+export function initializeNavigationListeners(_logger?: Logger) {
+  if (logger) logger = _logger;
+
+  document.addEventListener("keydown", navigateOnKeydownCallback);
 }
+
+const clearNavigationListeners = () => document.removeEventListener("keydown", navigateOnKeydownCallback);
 
 const scrollPauseInterval = 50;
 
 let attemptingNavigation = false;
 let keyPressDuringNavigation = false;
-async function navigate(direction: Direction, logger?: Logger, keyboardEvent?: KeyboardEvent) {
+async function navigate(direction: Direction, keyboardEvent?: KeyboardEvent) {
   let nextEl: HTMLElement | undefined;
 
   if (direction === Direction.None) return;
@@ -84,14 +92,14 @@ async function navigate(direction: Direction, logger?: Logger, keyboardEvent?: K
 
           scrollView.scrollBy(0, -300);
 
-          navigate(Direction.Up, logger);
+          navigate(Direction.Up);
         } else if (verticalScrollStatus !== "top" && verticalScrollStatus !== "noscroll" && !keyPressDuringNavigation) {
           // Scroll up and try looking for elements again
           await sleep(scrollPauseInterval);
 
           window.scrollBy(0, -300);
 
-          navigate(Direction.Up, logger);
+          navigate(Direction.Up);
         } else {
           if (fromKeypress) logger?.logKeypress(keyboardEvent.key, direction);
 
@@ -139,7 +147,7 @@ async function navigate(direction: Direction, logger?: Logger, keyboardEvent?: K
 
           scrollView.scrollBy(0, 300);
 
-          navigate(Direction.Down, logger);
+          navigate(Direction.Down);
         } else if (
           verticalScrollStatus !== "bottom" &&
           verticalScrollStatus !== "noscroll" &&
@@ -152,7 +160,7 @@ async function navigate(direction: Direction, logger?: Logger, keyboardEvent?: K
 
           window.scrollBy(0, 300);
 
-          navigate(Direction.Down, logger);
+          navigate(Direction.Down);
         } else {
           if (fromKeypress) logger?.logKeypress(keyboardEvent.key, direction);
 
@@ -182,3 +190,5 @@ async function navigate(direction: Direction, logger?: Logger, keyboardEvent?: K
 const sleep = (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
+
+onEventListenerStatusChange({ onEnable: initializeNavigationListeners, onDisable: clearNavigationListeners });
