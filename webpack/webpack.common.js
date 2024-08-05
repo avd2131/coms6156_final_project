@@ -4,10 +4,6 @@ const { DefinePlugin } = require("webpack");
 const srcDir = path.join(__dirname, "..", "src");
 require("dotenv").config({ path: "./.env" });
 
-// Log environment variables to the console
-console.log("AWS_ACCESS_KEY_ID:", process.env.AWS_ACCESS_KEY_ID);
-console.log("AWS_SECRET_ACCESS_KEY:", process.env.AWS_SECRET_ACCESS_KEY);
-
 module.exports = {
   entry: {
     popup: path.join(srcDir, "popup.tsx"),
