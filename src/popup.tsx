@@ -6,10 +6,10 @@ import { EventListenersEventType, EventType, PopupEventType } from "./types/even
 import { DEFAULT_SETTINGS, Settings } from "./types/settings";
 import { areSettingsEqual } from "./utils/settings.utils";
 
-let lastSavedSettings: Settings = DEFAULT_SETTINGS;
-
 const Popup = () => {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const [lastSavedSettings, setLastSavedSettings] = useState<Settings>(DEFAULT_SETTINGS);
+
   const {
     extensionEnabled,
     mute,
@@ -34,7 +34,7 @@ const Popup = () => {
   useEffect(() => {
     chrome.storage.sync.get(settings, (items) => {
       setSettings(items as Settings);
-      lastSavedSettings = items as Settings;
+      setLastSavedSettings(items as Settings);
     });
     chrome.storage.sync.get(["uid"], (items) => setUid(items.uid));
   }, []);
@@ -44,7 +44,7 @@ const Popup = () => {
 
     await chrome.storage.sync.set(settingsToSave);
     setSettings(settingsToSave);
-    lastSavedSettings = settingsToSave;
+    setLastSavedSettings(settingsToSave);
 
     console.log("Settings saved");
   };

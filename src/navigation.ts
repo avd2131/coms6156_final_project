@@ -43,7 +43,7 @@ const navigateOnKeydownCallback = (e: KeyboardEvent) => {
 
 let logger: Logger | undefined;
 export function initializeNavigationListeners(_logger?: Logger) {
-  if (logger) logger = _logger;
+  if (_logger) logger = _logger;
 
   document.addEventListener("keydown", navigateOnKeydownCallback);
 }
@@ -115,6 +115,8 @@ async function navigate(direction: Direction, keyboardEvent?: KeyboardEvent) {
       if (nextEl) {
         // Element found
         nextEl.focus();
+
+        console.log("[left]: logger - ", logger);
 
         if (fromKeypress) logger?.logKeypress(keyboardEvent.key, direction, lastFocusedElement.tagName, nextEl.tagName);
       } else {
