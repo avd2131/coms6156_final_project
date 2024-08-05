@@ -10,9 +10,6 @@ import { InteractionEvent, KeypressEventBody, ScrollEventBody } from "../types/i
 const LOG_GROUP_NAME = "Interactions";
 const LOG_STREAM_NAME = "Interaction";
 
-const AWS_ACCESS_KEY_ID = "";
-const AWS_SECRET_ACCESS_KEY = "";
-
 /**
  * This class is responsible for logging user interactions to AWS CloudWatch.
  *
@@ -32,19 +29,22 @@ export class Logger {
   constructor(uid: string) {
     this.uid = uid;
 
-    if ((AWS_ACCESS_KEY_ID as string) === "") {
+    if ((process.env.AWS_ACCESS_KEY_ID as string) === "") {
       throw new Error("AWS_ACCESS_KEY_ID is not set.");
     }
 
-    if ((AWS_SECRET_ACCESS_KEY as string) === "") {
+    if ((process.env.AWS_SECRET_ACCESS_KEY as string) === "") {
       throw new Error("AWS_SECRET_ACCESS_KEY is not set.");
     }
+
+    console.log("AWS_ACCESS_KEY_ID: ", process.env.AWS_ACCESS_KEY_ID);
+    console.log("AWS_SECRET_ACCESS_KEY: ", process.env.AWS_SECRET_ACCESS_KEY);
 
     this.cloudWatchClient = new CloudWatchLogs({
       region: "us-east-1",
       credentials: {
-        accessKeyId: AWS_ACCESS_KEY_ID,
-        secretAccessKey: AWS_SECRET_ACCESS_KEY,
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
       },
     });
   }
