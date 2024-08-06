@@ -1,5 +1,5 @@
 import Haikunator from "haikunator";
-import { playSound } from "./audioPlayer";
+import { playSound, stopAllSounds } from "./audioPlayer";
 import { initializeNavigationListeners, lastFocusedElement, setLastFocusedElement } from "./navigation";
 import { getReadout } from "./textContent";
 import { initializeExtensionToggleListener } from "./toggleHandler";
@@ -168,6 +168,12 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   }
 });
 
-onEventListenerStatusChange({ onEnable: initializeFocusHandlers, onDisable: clearFocusHandlers });
+onEventListenerStatusChange({
+  onEnable: initializeFocusHandlers,
+  onDisable: () => {
+    clearFocusHandlers();
+    stopAllSounds();
+  },
+});
 
 initialize();
