@@ -2,6 +2,7 @@ import Haikunator from "haikunator";
 import { playSound } from "./audioPlayer";
 import { initializeNavigationListeners, lastFocusedElement, setLastFocusedElement } from "./navigation";
 import { getReadout } from "./textContent";
+import { initializeExtensionToggleListener } from "./toggleHandler";
 import { Direction } from "./types/direction";
 import { EventType, PopupEventType } from "./types/events";
 import { ScrollSettings, Settings } from "./types/settings";
@@ -28,6 +29,8 @@ const initialize = async () => {
   if (enableCloudWatch) {
     logger = new Logger(uid);
   }
+
+  initializeExtensionToggleListener();
 
   // Set up 'WASD' navigation
   const extensionEnabled = await isExtensionEnabled();

@@ -13,4 +13,6 @@ export enum PopupEventType {
 export enum EventListenersEventType {
   EnableListeners = "enable",
   DisableListeners = "disable",
+  EnableListenersFromContent = "enable-event-listeners-from-content",
+  DisableListenersFromContent = "disable-event-listeners-from-content",
 }

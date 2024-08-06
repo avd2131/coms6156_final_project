@@ -9,6 +9,10 @@
     "page": "options.html"
   },
 
+  "background": {
+    "service_worker": "js/background.js"
+  },
+
   "action": {
     "default_icon": "icon.png",
     "default_popup": "popup.html"
@@ -20,6 +24,16 @@
       "js": ["js/vendor.js", "js/content_script.js"]
     }
   ],
+
+  "commands": {
+    "toggle-extension": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Comma",
+        "mac": "Command+Shift+Comma"
+      },
+      "description": "Toggle the extension"
+    }
+  },
 
   "web_accessible_resources": [{ "resources": ["*.mp3"], "matches": ["<all_urls>"] }],
 
