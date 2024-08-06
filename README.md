@@ -32,3 +32,7 @@ From this directory,
 
 - Node v18 LTS or greater
 - npm
+
+**Usage**
+
+Extension can be toggled on/off with the `Ctrl`/`Cmd` + `Shift` + `,` keyboard shortcut.
