@@ -1,5 +1,11 @@
 # WebNExt -- Spatial Interactions Chrome Extension
 
+This code corresponds to a research project from the CEAL Lab, titled "It Brought Me Joy": Opportunities for Spatial Browsing in Desktop Screen Readers.
+
+The full citation for the paper is:
+
+Arnavi Chheda-Kothary, Ather Sharif, David A. Rios, and Brian A. Smith. 2025. “It Brought Me Joy”: Opportunities for Spatial Browsing in Desktop Screen Readers. In CHI Conference on Human Factors in Computing Systems (CHI ’25), April 26-May 1, 2025, Yokohama, Japan. ACM, New York, NY, USA, 18 pages. https://doi.org/10.1145/3706598.3714125 (edited)
+
 This project builds a web extension to enable an in-house screen reader experience with spatial interactions such as directional arrow-key navigation and spatial audio outputs.
 
 Project page: https://ceal.cs.columbia.edu/spatialinteractions/
