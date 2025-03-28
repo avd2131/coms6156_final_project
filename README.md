@@ -11,14 +11,13 @@ This project builds a web extension to enable an in-house screen reader experien
 Project page: https://ceal.cs.columbia.edu/spatialinteractions/
 
 # Architecture Overview
+The user must first tab into the page, since the browser doesn't allow a script-triggered change in focus until a user carries out an action.
 
-1. "Scan" the page (current in-view screen) -- open questions about best way to do this. Should we just crawl the DOM? How do you control when you hit the end of the page (we don't want to scroll in this case)? Should we use some sort of AI/CV/OCR? How do you correlate elements to their DOM info in this case?
+1. An element is selected through arrow key navigation ([navigation.ts](https://github.com/ColumbiaCEAL/spatial-interactions-extension/blob/main/src/navigation.ts)). Navigating directionally with arrow keys triggers [a loop](https://github.com/ColumbiaCEAL/spatial-interactions-extension/blob/092e257233ddba7d2cd7c908d8592b37b702e69a/src/utils/element.utils.ts#L318) that moves 15px in the given direction and checks for an element at that point using `document.elementFromPoint`.
 
-2. Send elements info up to some TTS service to get audio (add associations of our own for what should be read out when we have headings vs. images vs. text vs. links etc.)
+2. Once an element is found, we [get its name and relevant content](https://github.com/ColumbiaCEAL/spatial-interactions-extension/blob/092e257233ddba7d2cd7c908d8592b37b702e69a/src/textContent.ts#L9) and process it in `mespeak.js` to get its speech audio.
 
-3. Spatialize corresponding audio.
-
-4. If user scrolls the page we will need to repeat this pre-processing.
+3. Spatialize & play corresponding audio using the Web Audio API.
 
 ## Build Instructions
 
