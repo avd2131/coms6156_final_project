@@ -1,6 +1,7 @@
 import { getReadout } from "../textContent";
 import { Direction } from "../types/direction";
 import { Settings } from "../types/settings";
+import { playSound } from "../audioPlayer";
 
 let detailedLogging = false;
 chrome.storage.sync.get(["detailedLogging"], (items) => {
@@ -406,6 +407,10 @@ function getElementInRegion({
       break;
   }
 
+  playSound({
+    bias: { x: 0, y: 0 },
+    scrollBeep: true,
+  });
   return undefined;
 }
 
