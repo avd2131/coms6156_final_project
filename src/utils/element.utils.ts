@@ -2,6 +2,7 @@ import { getReadout } from "../textContent";
 import { Direction } from "../types/direction";
 import { Settings } from "../types/settings";
 import { playSound } from "../audioPlayer";
+import { lastFocusedElement } from "../navigation";
 
 let detailedLogging = false;
 chrome.storage.sync.get(["detailedLogging"], (items) => {
@@ -408,7 +409,7 @@ function getElementInRegion({
   }
 
   playSound({
-    bias: { x: 0, y: 0 },
+    bias: getBias(lastFocusedElement!),
     scrollBeep: true,
   });
   return undefined;
