@@ -80,13 +80,12 @@ const initializeFocusHandlers = (logger?: Logger) => {
         });
     }
 
-    for (let i = 0; i < navigationOutput.length; i+=10) {
-      if (i != 0) {
-        await playSound({
-          bias: findBias(navigationOutput[i].x, navigationOutput[i].y),
-          scrollBeep: true,
-        });
-      }
+    for (let i = 10; i < navigationOutput.length; i+=10) {
+      await playSound({
+        bias: findBias(navigationOutput[i].x, navigationOutput[i].y),
+        click: true,
+      });
+      await new Promise(f => setTimeout(f, 250));
     }
 
     if (!mute) playSound({ bias: getBias(activeElement), text: getReadout(activeElement) });
