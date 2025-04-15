@@ -3,6 +3,7 @@ import { Direction } from "../types/direction";
 import { Settings } from "../types/settings";
 import { playSound } from "../audioPlayer";
 import { lastFocusedElement } from "../navigation";
+import { edgeFeedbackSetting } from "../content_script";
 
 export let navigationOutput: Array<{x: number, y: number}>;
 
@@ -426,10 +427,13 @@ function getElementInRegion({
       break;
   }
 
-  playSound({
-    bias: getBias(lastFocusedElement!),
-    scrollBeep: true,
-  });
+  if (edgeFeedbackSetting) {
+    playSound({
+      bias: getBias(lastFocusedElement!),
+      scrollBeep: true,
+    });
+  }
+
   return undefined;
 }
 

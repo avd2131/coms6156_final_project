@@ -17,6 +17,8 @@ const Popup = () => {
     voiceSpeed,
     scrollFeedback,
     spatializeScrollFeedback,
+    edgeFeedback,
+    blankRegionNavigationFeedback,
     leftStereoCutoff,
     rightStereoCutoff,
     detailedLogging,
@@ -111,6 +113,24 @@ const Popup = () => {
             onChange={() => setSetting("spatializeScrollFeedback", !spatializeScrollFeedback)}
           />
           <p>Spatialize</p>
+        </div>
+        <div className="checkbox-wrapper">
+          <input
+            type="checkbox"
+            checked={edgeFeedback}
+            disabled={soundSettingDisabled}
+            onChange={() => setSetting("edgeFeedback", !edgeFeedback)}
+          />
+          <p>Edge feedback</p>
+        </div>
+        <div className="checkbox-wrapper">
+          <input
+            type="checkbox"
+            checked={blankRegionNavigationFeedback}
+            disabled={soundSettingDisabled}
+            onChange={() => setSetting("blankRegionNavigationFeedback", !blankRegionNavigationFeedback)}
+          />
+          <p>Blank region navigation feedback</p>
         </div>
         <h4>Stereo panning thresholds</h4>
         <div id="sliderContainer">
