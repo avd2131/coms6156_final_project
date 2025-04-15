@@ -4,6 +4,8 @@ import { Settings } from "../types/settings";
 import { playSound } from "../audioPlayer";
 import { lastFocusedElement } from "../navigation";
 
+export let navigationOutput: Array<{x: number, y: number}>;
+
 let detailedLogging = false;
 chrome.storage.sync.get(["detailedLogging"], (items) => {
   detailedLogging = (items as Partial<Settings>).detailedLogging ?? false;
@@ -22,6 +24,17 @@ export function getBias(element: HTMLElement, roundToTenth = true): { x: number;
     xBias = Math.round(xBias * 10) / 10;
     yBias = Math.round(yBias * 10) / 10;
   }
+
+  return { x: xBias, y: yBias };
+}
+
+/** Returns x/y biases bounded by -1 & 1. (0 signifies center of screen) */
+export function findBias(x: number, y :number): { x: number; y: number } {
+  let xBias = Math.min(Math.max(-1 + 2 * x, -1), 1)
+  let yBias = Math.min(Math.max(1 - 2 * y, -1), 1); 
+
+  xBias = Math.round(xBias * 10) / 10;
+  yBias = Math.round(yBias * 10) / 10;
 
   return { x: xBias, y: yBias };
 }
@@ -214,6 +227,7 @@ export function getElementInDirection(
   nextEl = startingElement;
   const rect = startingElement.getBoundingClientRect();
 
+  navigationOutput = []
   switch (dir) {
     case Direction.Left:
       nextEl = getElementInRegion({
@@ -335,6 +349,7 @@ function getElementInRegion({
             }
           }
         }
+        navigationOutput.push({x: x, y: (topY + bottomY) / 2})
       }
       break;
     case Direction.Right:
@@ -358,6 +373,7 @@ function getElementInRegion({
             }
           }
         }
+        navigationOutput.push({x: x, y: (topY + bottomY) / 2})
       }
       break;
     case Direction.Up:
@@ -381,6 +397,7 @@ function getElementInRegion({
             }
           }
         }
+        navigationOutput.push({x: (minX + maxX) / 2, y: y})
       }
       break;
     case Direction.Down:
@@ -404,6 +421,7 @@ function getElementInRegion({
             }
           }
         }
+        navigationOutput.push({x: (minX + maxX) / 2, y: y})
       }
       break;
   }

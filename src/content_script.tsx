@@ -10,6 +10,7 @@ import { getBias } from "./utils/element.utils";
 import { onEventListenerStatusChange } from "./utils/eventHandling.utils";
 import { Logger } from "./utils/logging.utils";
 import { isExtensionEnabled } from "./utils/settings.utils";
+import { navigationOutput, findBias } from "./utils/element.utils"
 
 console.log("%cSpatial Interactions Extension: Content script loaded!", "color: green; font-style: bold");
 
@@ -77,6 +78,15 @@ const initializeFocusHandlers = (logger?: Logger) => {
           bias: spatializeScrollFeedback ? { x: getBias(lastFocusedElement!).x, y: -1 } : { x: 0, y: 0 },
           scrollBeep: true,
         });
+    }
+
+    for (let i = 0; i < navigationOutput.length; i+=10) {
+      if (i != 0) {
+        await playSound({
+          bias: findBias(navigationOutput[i].x, navigationOutput[i].y),
+          scrollBeep: true,
+        });
+      }
     }
 
     if (!mute) playSound({ bias: getBias(activeElement), text: getReadout(activeElement) });
