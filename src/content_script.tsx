@@ -5,11 +5,14 @@ import { getReadout } from "./textContent";
 import { initializeExtensionToggleListener } from "./toggleHandler";
 import { Direction } from "./types/direction";
 import { EventType, PopupEventType } from "./types/events";
-import { ScrollSettings, Settings } from "./types/settings";
+import { ScrollSettings, AddtlAudioFeedbackSettings, Settings } from "./types/settings";
 import { getBias } from "./utils/element.utils";
 import { onEventListenerStatusChange } from "./utils/eventHandling.utils";
 import { Logger } from "./utils/logging.utils";
 import { isExtensionEnabled } from "./utils/settings.utils";
+import { navigationOutput, findBias } from "./utils/element.utils"
+
+export let edgeFeedbackSetting: boolean;
 
 console.log("%cSpatial Interactions Extension: Content script loaded!", "color: green; font-style: bold");
 
@@ -55,7 +58,7 @@ const initializeFocusHandlers = (logger?: Logger) => {
   clearFocusHandlers();
 
   const focusInListenerCallback = async () => {
-    const { scrollFeedback, spatializeScrollFeedback, mute } = await getScrollSoundSettings();
+    const { scrollFeedback, spatializeScrollFeedback, mute, blankRegionNavigationFeedback } = await getSoundSettings();
 
     firstFocus = false;
 
@@ -77,6 +80,16 @@ const initializeFocusHandlers = (logger?: Logger) => {
           bias: spatializeScrollFeedback ? { x: getBias(lastFocusedElement!).x, y: -1 } : { x: 0, y: 0 },
           scrollBeep: true,
         });
+    }
+
+    if (blankRegionNavigationFeedback) {
+      for (let i = 10; i < navigationOutput.length; i+=10) {
+        await playSound({
+          bias: findBias(navigationOutput[i].x, navigationOutput[i].y),
+          click: true,
+        });
+        await new Promise(f => setTimeout(f, 250));
+      }
     }
 
     if (!mute) playSound({ bias: getBias(activeElement), text: getReadout(activeElement) });
@@ -112,14 +125,17 @@ const clearFocusHandlers = () => {
   }
 };
 
-async function getScrollSoundSettings(): Promise<Pick<Settings, "mute"> & ScrollSettings> {
-  const items = await chrome.storage.sync.get(["scrollFeedback", "spatializeScrollFeedback", "mute"]);
-  const { scrollFeedback, spatializeScrollFeedback, mute } = items as Partial<Settings>;
+async function getSoundSettings(): Promise<Pick<Settings, "mute"> & ScrollSettings & Pick<AddtlAudioFeedbackSettings, "blankRegionNavigationFeedback">> {
+  const items = await chrome.storage.sync.get(["scrollFeedback", "spatializeScrollFeedback", "mute", "edgeFeedback", "blankRegionNavigationFeedback"]);
+  const { scrollFeedback, spatializeScrollFeedback, mute, edgeFeedback, blankRegionNavigationFeedback } = items as Partial<Settings>;
+
+  edgeFeedbackSetting = edgeFeedback ?? false;
 
   return {
     scrollFeedback: scrollFeedback ?? false,
     spatializeScrollFeedback: spatializeScrollFeedback ?? false,
     mute: mute ?? false,
+    blankRegionNavigationFeedback: blankRegionNavigationFeedback ?? false,
   };
 }
 

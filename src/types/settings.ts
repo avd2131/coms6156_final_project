@@ -1,4 +1,4 @@
-export interface Settings extends ScrollSettings, StereoPanningSettings, DeveloperSettings {
+export interface Settings extends ScrollSettings, AddtlAudioFeedbackSettings, StereoPanningSettings, DeveloperSettings {
   extensionEnabled: boolean;
   mute: boolean;
   spatializeAudio: boolean;
@@ -8,6 +8,11 @@ export interface Settings extends ScrollSettings, StereoPanningSettings, Develop
 export interface ScrollSettings {
   scrollFeedback: boolean;
   spatializeScrollFeedback: boolean;
+}
+
+export interface AddtlAudioFeedbackSettings {
+  edgeFeedback: boolean;
+  blankRegionNavigationFeedback: boolean;
 }
 
 export interface StereoPanningSettings {
@@ -23,6 +28,8 @@ export interface DeveloperSettings {
 export const DEFAULT_SETTINGS: Settings = {
   extensionEnabled: true,
   scrollFeedback: true,
+  edgeFeedback: false,
+  blankRegionNavigationFeedback: false,
   spatializeAudio: true,
   spatializeScrollFeedback: true,
   mute: false,

@@ -20,6 +20,15 @@ getArrayBuffer(beepFileURL).then((buffer) => {
   beepArrayBuffer = buffer;
 });
 
+// Click
+const clickFileURL = require("../public/click.mp3");
+let clickArrayBuffer: ArrayBuffer;
+let clickAudioBuffer: AudioBuffer;
+
+getArrayBuffer(clickFileURL).then((buffer) => {
+  clickArrayBuffer = buffer;
+});
+
 let pitchConst = 350;
 
 /** Sets the position of the PannerNode. */
@@ -60,9 +69,10 @@ interface PlaySoundProps {
   bias: { x: number; y: number };
   text?: string;
   scrollBeep?: boolean;
+  click?: boolean;
 }
 
-export async function playSound({ bias, text, scrollBeep = false }: PlaySoundProps): Promise<void> {
+export async function playSound({ bias, text, scrollBeep = false, click = false }: PlaySoundProps): Promise<void> {
   if (text === "") return;
 
   return new Promise(async (resolve, reject) => {
@@ -73,6 +83,7 @@ export async function playSound({ bias, text, scrollBeep = false }: PlaySoundPro
       panner = audioCtx.createPanner();
 
       beepAudioBuffer = await audioCtx.decodeAudioData(beepArrayBuffer);
+      clickAudioBuffer = await audioCtx.decodeAudioData(clickArrayBuffer);
     }
 
     await audioCtx.resume();
@@ -88,11 +99,7 @@ export async function playSound({ bias, text, scrollBeep = false }: PlaySoundPro
     lastSoundSource = { sourceNode: source, id: id };
     sources.push(source);
 
-    if (!scrollBeep) {
-      // TTS using MeSpeak
-      const audioData = meSpeak.speak(text, { speed: voiceSpeed, rawdata: true });
-      source.buffer = await audioCtx.decodeAudioData(audioData);
-    } else {
+    if (scrollBeep) {
       // Royalty free beep: https://samplefocus.com/samples/short-beep
       if (!beepArrayBuffer) {
         console.error("There was an error in loading the beep sound file.");
@@ -101,6 +108,19 @@ export async function playSound({ bias, text, scrollBeep = false }: PlaySoundPro
       }
 
       source.buffer = beepAudioBuffer;
+    } else if (click) {
+      // Royalty free click: https://samplefocus.com/samples/click-latin-jazz-drum-kit
+      if (!clickArrayBuffer) {
+        console.error("There was an error in loading the beep sound file.");
+        reject();
+        return;
+      }
+
+      source.buffer = clickAudioBuffer;
+    } else {
+      // TTS using MeSpeak
+      const audioData = meSpeak.speak(text, { speed: voiceSpeed, rawdata: true });
+      source.buffer = await audioCtx.decodeAudioData(audioData);
     }
 
     source.onended = () => {
